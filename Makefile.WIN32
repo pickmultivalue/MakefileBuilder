@@ -1,9 +1,9 @@
 libobjs=Functions]MOBJECT\fnLAST.obj Functions]MOBJECT\fnTRIMLAST.obj Functions]MOBJECT\fnOPEN.obj Functions]MOBJECT\fnGETYN.obj jBC_Makefile]MOBJECT\fnPARSESOURCE.obj
 binobjs=jBC_Makefile]MOBJECT\ZUMBLDMAKE.obj jBC_Makefile]MOBJECT\ZUMGETCATS.obj
 
-alltargets=bin\ZUMBLDMAKE.exe bin\ZUMGETCATS.exe
+alltargets=.\bin\ZUMBLDMAKE.exe .\bin\ZUMGETCATS.exe
 
-targets: $(alltargets) lib\libdef.def
+targets: $(alltargets) .\lib\libdef.def
 
 all: targets
 
@@ -23,7 +23,7 @@ jBC_Makefile]MOBJECT\ZUMBLDMAKE.obj: jBC_Makefile\ZUMBLDMAKE.b
 	BASIC jBC_Makefile ZUMBLDMAKE.b
 
 bin\ZUMBLDMAKE.exe: jBC_Makefile]MOBJECT\ZUMBLDMAKE.obj
-	CATALOG -obin jBC_Makefile ZUMBLDMAKE.b
+	CATALOG -o.\bin jBC_Makefile ZUMBLDMAKE.b
 
 jBC_Makefile]MOBJECT\fnPARSESOURCE.obj: jBC_Makefile\fnPARSESOURCE.b
 	BASIC jBC_Makefile fnPARSESOURCE.b
@@ -32,11 +32,11 @@ jBC_Makefile]MOBJECT\ZUMGETCATS.obj: jBC_Makefile\ZUMGETCATS.b
 	BASIC jBC_Makefile ZUMGETCATS.b
 
 bin\ZUMGETCATS.exe: jBC_Makefile]MOBJECT\ZUMGETCATS.obj
-	CATALOG -obin jBC_Makefile ZUMGETCATS.b
+	CATALOG -o.\bin jBC_Makefile ZUMGETCATS.b
 
-lib\libdef.def: Functions]MOBJECT\fnLAST.obj Functions]MOBJECT\fnTRIMLAST.obj Functions]MOBJECT\fnOPEN.obj Functions]MOBJECT\fnGETYN.obj jBC_Makefile]MOBJECT\fnPARSESOURCE.obj
-	CATALOG -Llib Functions fnLAST.b fnTRIMLAST.b fnOPEN.b fnGETYN.b
-	CATALOG -Llib jBC_Makefile fnPARSESOURCE.b
+.\lib\libdef.def: Functions]MOBJECT\fnLAST.obj Functions]MOBJECT\fnTRIMLAST.obj Functions]MOBJECT\fnOPEN.obj Functions]MOBJECT\fnGETYN.obj jBC_Makefile]MOBJECT\fnPARSESOURCE.obj
+	CATALOG -L.\lib Functions fnLAST.b fnTRIMLAST.b fnOPEN.b fnGETYN.b
+	CATALOG -L.\lib jBC_Makefile fnPARSESOURCE.b
 
 clean:
 	del $(libobjs)
