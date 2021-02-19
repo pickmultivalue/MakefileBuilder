@@ -15,8 +15,8 @@
     EQU A.fpath     TO A.cat(2)
     EQU A.timestamp TO A.cat(3)
 !
-    rc = fnOPEN('ZUMCATS', F.catalog, 1)
-    rc = fnOPEN('BADCATS', F.badcatalog, 1)
+    rc = fnOPEN('.':DIR_DELIM_CH:'ZUMCATS', F.catalog, 1)
+    rc = fnOPEN('.':DIR_DELIM_CH:'BADCATS', F.badcatalog, 1)
     CLEARFILE F.catalog
     CLEARFILE F.badcatalog
     badcount = 0
@@ -31,13 +31,6 @@
         libdef = 'libdef'
         find = 'jfind'
         devnull = 'NUL'
-!        EXECUTE 'jshow -c find' CAPTURING io
-!        IF LEN(io) EQ 0 THEN
-!            CRT 'Please install cygwin tools'
-!            CRT
-!            CRT 'You will need: find, make'
-!            STOP
-!        END
     END ELSE
         libdef = 'lib' 
         find = 'find' 

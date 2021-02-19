@@ -29,7 +29,7 @@
         K.file := bas_suffix
     END ELSE
         READ source FROM F.var, K.file ELSE
-            error<2, -1> = K.file
+            error<2, -1> = fname:',':K.file
             RETURN(@FALSE)
         END
     END

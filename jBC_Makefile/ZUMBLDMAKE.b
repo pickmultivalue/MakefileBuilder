@@ -105,8 +105,10 @@
     END
 !
     missing_files = ''
+    ZUMCATS = '.':DIR_DELIM_CH:'ZUMCATS'
+    BADCATS = '.':DIR_DELIM_CH:'BADCATS'
     IF NOT(fnOPEN('.', F.currdir, error)) THEN missing_files<-1> = error
-    IF NOT(fnOPEN('ZUMCATS', F.zumcats, error)) THEN
+    IF NOT(fnOPEN(ZUMCATS, F.zumcats, error)) THEN
         IF skipZUMCATS THEN
             CRT '-s option specified but ZUMCATS could not be opened'
             STOP
@@ -114,9 +116,9 @@
         question = 'Create ZUMCATS file for building catalog list'
         IF fnGETYN(question, 'Y':@VM:'N') EQ 'Y' THEN
             error = ''
-            EXECUTE 'CREATE-FILE DATA ZUMCATS 47'
-            EXECUTE 'CREATE-FILE DATA BADCATS 47'
-            rc = fnOPEN('ZUMCATS', F.zumcats, error)
+            EXECUTE 'CREATE-FILE DATA ':ZUMCATS:' 47'
+            EXECUTE 'CREATE-FILE DATA ':BADCATS:' 47'
+            rc = fnOPEN(ZUMCATS, F.zumcats, error)
         END
         missing_files<-1> = error
     END
@@ -162,7 +164,7 @@
                 missing_files<-1> = A.fname
                 error = @TRUE
             END ELSE
-                objFile = A.fname:',OBJECT'
+                objFile = A.fname:']MOBJECT'
                 IF NOT(fnOPEN(objFile, f.object, '')) THEN
                     IF convertFiles THEN
                         EXECUTE 'CREATE-FILE DATA ':objFile:' TYPE=UD'
@@ -263,9 +265,9 @@
         NEXT p
     NEXT f
     IF LEN(missing_code) THEN
-        CRT 'The following source files could not be read:'
+        CRT 'The following problems were encountered:'
         CRT
-        CRT CHANGE(missing_code, @VM, ', ')
+        CRT CHANGE(CHANGE(missing_code, @AM, @CR:@LF), @VM, @CR:@LF)
         IF NOT(ignoreMissing) THEN STOP
     END
 !
@@ -325,7 +327,7 @@
                 LOOP
                     REMOVE incl FROM xref AT loc SETTING delim
                     IF LEN(incl) THEN
-                        dependency := ' ':incl
+                        dependency := ' ':CHANGE(incl, '$', '$$')
                     END
                 WHILE delim DO REPEAT
                 IF target EQ source THEN
@@ -343,15 +345,15 @@
                         subs<-1> = source
                     END ELSE
                         bins<-1> = object
-                        target = 'bin':dir_delim:target:cmd_suffix
+                        target = '.':dir_delim:'bin':dir_delim:target:cmd_suffix
                         targets<-1> = target
                         makefile<-1> = @AM:target:': ':object
                         makefile<-1> = tab:'CATALOG -o.':dir_delim:'bin ':fname:' ':source
                     END
                 END
             NEXT p
-            subs = CHANGE(subs, @AM, ' ')
-            IF m EQ 2 THEN
+            subs = TRIM(CHANGE(subs, @AM, ' '))
+            IF m EQ 2 AND LEN(subs) THEN
                 catsubs<-1> = tab:'CATALOG -L.':dir_delim:'lib ':fname:' ':subs
             END
             rebuild<-1> = tab:'CATALOG -L.':dir_delim:'lib -o.':dir_delim:'bin ':fname:' ':CHANGE(progs<1, 1>, @SVM, ' ')
@@ -413,5 +415,16 @@ checkMissing:
 !
 processSource:
 !
-    rc = fnPARSESOURCE(fname, fvars(rpos), prog, includes, missing_code)
+    missing_inc = ''
+    rc = fnPARSESOURCE(fname, fvars(rpos), prog, includes, missing_inc)
+    IF LEN(missing_inc) THEN
+        missing_code<-1> = 'Code ':fname:',':prog
+        IF LEN(missing_inc<1>) THEN
+            missing_code<-1> = "Include files that couldn't be opened:":@AM:missing_inc<1>
+        END
+        IF LEN(missing_inc<2>) THEN
+            missing_code<-1> = "Includes the couldn't be read:":@AM:missing_inc<2>
+        END
+    END
+    
     RETURN
