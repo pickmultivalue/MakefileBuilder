@@ -58,6 +58,7 @@
         CRT '-f<makefilename> (default: Makefile)'
         CRT '-o Overwrite'
         CRT '-m Ignore missing errors'
+        CRT '-s Skip catalog discovery'
         CRT '-C Convert BP files (convert to dir, create OBJECT directory if missing)'
         CRT '-D Generate Doxygen Help'
         STOP
@@ -77,6 +78,11 @@
         ignoreMissing = @TRUE
         DEL args<opos>
     END ELSE ignoreMissing = @FALSE
+!
+    LOCATE '-s' IN args SETTING opos THEN
+        skipZUMCATS = @TRUE
+        DEL args<opos>
+    END ELSE skipZUMCATS = @FALSE
 !
     LOCATE '-v' IN args SETTING vpos THEN
         verbose = @TRUE
@@ -101,6 +107,10 @@
     missing_files = ''
     IF NOT(fnOPEN('.', F.currdir, error)) THEN missing_files<-1> = error
     IF NOT(fnOPEN('ZUMCATS', F.zumcats, error)) THEN
+        IF skipZUMCATS THEN
+            CRT '-s option specified but ZUMCATS could not be opened'
+            STOP
+        END 
         question = 'Create ZUMCATS file for building catalog list'
         IF fnGETYN(question, 'Y':@VM:'N') EQ 'Y' THEN
             error = ''
@@ -126,7 +136,7 @@
 !
 ! Do bin/lib discovery
 !
-    EXECUTE 'ZUMGETCATS -l'
+    IF NOT(skipZUMCATS) THEN EXECUTE 'ZUMGETCATS -l'
 !
     rc = GETENV('PWD',pwd)
     pwd = CHANGE(pwd, DIR_DELIM_CH, @AM)
