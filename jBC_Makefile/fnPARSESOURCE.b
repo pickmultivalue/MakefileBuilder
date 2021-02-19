@@ -5,6 +5,7 @@
     DEFFUN fnOPEN()
 !
     COMMON /fnPARSESOURCE/ include_strings, jbase_includes
+    comments = '!*'
 !
     IF UNASSIGNED(include_strings) OR LEN(include_strings) EQ 0 THEN
         include_strings = ''
@@ -35,6 +36,7 @@
     sc = DCOUNT(source, @AM)
     FOR l = 1 TO sc
         line = TRIM(source<l>)
+        IF INDEX(comments, line[1,1], 1) THEN CONTINUE
         FOR w = 1 TO 2
             word = FIELD(line, ' ', w)
             LOCATE word IN include_strings SETTING ipos THEN

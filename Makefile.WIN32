@@ -1,23 +1,53 @@
-libobjs=Functions]MOBJECT\fnLAST.obj Functions]MOBJECT\fnTRIMLAST.obj Functions]MOBJECT\fnOPEN.obj Functions]MOBJECT\fnGETYN.obj jBC_Makefile]MOBJECT\fnPARSESOURCE.obj
-binobjs=jBC_Makefile]MOBJECT\ZUMBLDMAKE.obj jBC_Makefile]MOBJECT\ZUMGETCATS.obj
+libobjs=Functions]MOBJECT\fnCONVBP2DIR.obj Functions]MOBJECT\fnDECODE.obj Functions]MOBJECT\fnGETRELPATH.obj Functions]MOBJECT\fnGETYN.obj Functions]MOBJECT\fnLAST.obj Functions]MOBJECT\fnMOVEOBJECT.obj Functions]MOBJECT\fnOPEN.obj Functions]MOBJECT\fnTRIMLAST.obj jBC_Makefile]MOBJECT\fnPARSESOURCE.obj
+binobjs=Utilities]MOBJECT\CONVBP2DIR.obj Utilities]MOBJECT\make.obj Utilities]MOBJECT\move2enc.obj jBC_Makefile]MOBJECT\ZUMBLDMAKE.obj jBC_Makefile]MOBJECT\ZUMGETCATS.obj
 
-alltargets=.\bin\ZUMBLDMAKE.exe .\bin\ZUMGETCATS.exe
+alltargets=bin\CONVBP2DIR.exe bin\make.exe bin\move2enc.exe bin\ZUMBLDMAKE.exe bin\ZUMGETCATS.exe
 
-targets: $(alltargets) .\lib\libdef.def
+targets: $(alltargets) lib\libdef.def
 
 all: targets
+
+Functions]MOBJECT\fnCONVBP2DIR.obj: Functions\fnCONVBP2DIR.b
+	BASIC Functions fnCONVBP2DIR.b
+
+Functions]MOBJECT\fnDECODE.obj: Functions\fnDECODE.b
+	BASIC Functions fnDECODE.b
+
+Functions]MOBJECT\fnGETRELPATH.obj: Functions\fnGETRELPATH.b
+	BASIC Functions fnGETRELPATH.b
+
+Functions]MOBJECT\fnGETYN.obj: Functions\fnGETYN.b
+	BASIC Functions fnGETYN.b
 
 Functions]MOBJECT\fnLAST.obj: Functions\fnLAST.b
 	BASIC Functions fnLAST.b
 
-Functions]MOBJECT\fnTRIMLAST.obj: Functions\fnTRIMLAST.b
-	BASIC Functions fnTRIMLAST.b
+Functions]MOBJECT\fnMOVEOBJECT.obj: Functions\fnMOVEOBJECT.b
+	BASIC Functions fnMOVEOBJECT.b
 
 Functions]MOBJECT\fnOPEN.obj: Functions\fnOPEN.b
 	BASIC Functions fnOPEN.b
 
-Functions]MOBJECT\fnGETYN.obj: Functions\fnGETYN.b
-	BASIC Functions fnGETYN.b
+Functions]MOBJECT\fnTRIMLAST.obj: Functions\fnTRIMLAST.b
+	BASIC Functions fnTRIMLAST.b
+
+Utilities]MOBJECT\CONVBP2DIR.obj: Utilities\CONVBP2DIR.b
+	BASIC Utilities CONVBP2DIR.b
+
+bin\CONVBP2DIR.exe: Utilities]MOBJECT\CONVBP2DIR.obj
+	CATALOG -o.\bin Utilities CONVBP2DIR.b
+
+Utilities]MOBJECT\make.obj: Utilities\make.b
+	BASIC Utilities make.b
+
+bin\make.exe: Utilities]MOBJECT\make.obj
+	CATALOG -o.\bin Utilities make.b
+
+Utilities]MOBJECT\move2enc.obj: Utilities\move2enc.b
+	BASIC Utilities move2enc.b
+
+bin\move2enc.exe: Utilities]MOBJECT\move2enc.obj
+	CATALOG -o.\bin Utilities move2enc.b
 
 jBC_Makefile]MOBJECT\ZUMBLDMAKE.obj: jBC_Makefile\ZUMBLDMAKE.b
 	BASIC jBC_Makefile ZUMBLDMAKE.b
@@ -25,19 +55,27 @@ jBC_Makefile]MOBJECT\ZUMBLDMAKE.obj: jBC_Makefile\ZUMBLDMAKE.b
 bin\ZUMBLDMAKE.exe: jBC_Makefile]MOBJECT\ZUMBLDMAKE.obj
 	CATALOG -o.\bin jBC_Makefile ZUMBLDMAKE.b
 
-jBC_Makefile]MOBJECT\fnPARSESOURCE.obj: jBC_Makefile\fnPARSESOURCE.b
-	BASIC jBC_Makefile fnPARSESOURCE.b
-
 jBC_Makefile]MOBJECT\ZUMGETCATS.obj: jBC_Makefile\ZUMGETCATS.b
 	BASIC jBC_Makefile ZUMGETCATS.b
 
 bin\ZUMGETCATS.exe: jBC_Makefile]MOBJECT\ZUMGETCATS.obj
 	CATALOG -o.\bin jBC_Makefile ZUMGETCATS.b
 
-.\lib\libdef.def: Functions]MOBJECT\fnLAST.obj Functions]MOBJECT\fnTRIMLAST.obj Functions]MOBJECT\fnOPEN.obj Functions]MOBJECT\fnGETYN.obj jBC_Makefile]MOBJECT\fnPARSESOURCE.obj
-	CATALOG -L.\lib Functions fnLAST.b fnTRIMLAST.b fnOPEN.b fnGETYN.b
+jBC_Makefile]MOBJECT\fnPARSESOURCE.obj: jBC_Makefile\fnPARSESOURCE.b
+	BASIC jBC_Makefile fnPARSESOURCE.b
+
+lib\libdef.def: Functions]MOBJECT\fnCONVBP2DIR.obj Functions]MOBJECT\fnDECODE.obj Functions]MOBJECT\fnGETRELPATH.obj Functions]MOBJECT\fnGETYN.obj Functions]MOBJECT\fnLAST.obj Functions]MOBJECT\fnMOVEOBJECT.obj Functions]MOBJECT\fnOPEN.obj Functions]MOBJECT\fnTRIMLAST.obj jBC_Makefile]MOBJECT\fnPARSESOURCE.obj
+	CATALOG -L.\lib Functions fnCONVBP2DIR.b fnDECODE.b fnGETRELPATH.b fnGETYN.b fnLAST.b fnMOVEOBJECT.b fnOPEN.b fnTRIMLAST.b
+	CATALOG -L.\lib Utilities 
 	CATALOG -L.\lib jBC_Makefile fnPARSESOURCE.b
 
+rebuild: $(libobjs) $(binobjs)
+	CATALOG -L.\lib -o.\bin Functions fnCONVBP2DIR fnDECODE fnGETRELPATH fnGETYN fnLAST fnMOVEOBJECT fnOPEN fnTRIMLAST
+	CATALOG -L.\lib -o.\bin Utilities CONVBP2DIR make move2enc
+	CATALOG -L.\lib -o.\bin jBC_Makefile ZUMBLDMAKE ZUMGETCATS fnPARSESOURCE
+
 clean:
-	del $(libobjs)
-	del $(binobjs)
+	-del /Q .\lib\lib*.*
+	-del /F /Q .\Functions]MOBJECT\*
+	-del /F /Q .\Utilities]MOBJECT\*
+	-del /F /Q .\jBC_Makefile]MOBJECT\*

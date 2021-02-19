@@ -1,7 +1,7 @@
 ! PROGRAM make
     INCLUDE JBC.h
 #ifdef WIN32
-    EXECUTE 'jshow -c nmake' CAPTURING io
+    EXECUTE @IM:'knmake 2>&1' CAPTURING io
     IF LEN(io) EQ 0 THEN
         CRT 'Error: nmake not found in PATH'
         STOP

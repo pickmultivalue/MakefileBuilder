@@ -49,7 +49,7 @@
     END ELSE
         rc = GETENV('PATH', paths)
     END
-    findArgs = ' -name "*':FILE_SUFFIX_SO:' -print" 2>':devnull 
+    findArgs = ' -name *':FILE_SUFFIX_SO:' -print 2>':devnull
     findBins = find:' ':CHANGE(paths, DIR_SEP_CH, ' '):findArgs
     rc = GETENV('JBCRELEASEDIR', jbcrel)
     bins = ''
@@ -58,11 +58,14 @@
         path = FIELD(paths, DIR_SEP_CH, p)
         IF path EQ jbcrel:DIR_DELIM_CH:'bin' THEN CONTINUE
         EXECUTE ksh:find:' ':path:findArgs CAPTURING progs
+        CONVERT @CR TO '' IN progs
         progs = CHANGE(progs, FILE_SUFFIX_SO, '')
         pgcnt = DCOUNT(progs, @AM)
         FOR pg = 1 TO pgcnt
             prog = progs<pg>
             prog = fnLAST(prog, DIR_DELIM_CH)
+            IF prog MATCHES "0X'_TMP_'1N0N" THEN CONTINUE
+            IF prog MATCHES "0X'.exe'" THEN CONTINUE
             LOCATE prog IN bins BY 'AL' SETTING bpos ELSE
                 INS prog BEFORE bins<bpos>
             END

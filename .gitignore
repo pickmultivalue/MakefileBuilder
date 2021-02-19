@@ -1,0 +1,4 @@
+objdir
+*.obj
+*.dll
+*.exe
