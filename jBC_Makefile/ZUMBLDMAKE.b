@@ -423,7 +423,7 @@ processSource:
             missing_code<-1> = "Include files that couldn't be opened:":@AM:missing_inc<1>
         END
         IF LEN(missing_inc<2>) THEN
-            missing_code<-1> = "Includes the couldn't be read:":@AM:missing_inc<2>
+            missing_code<-1> = "Includes that couldn't be read:":@AM:missing_inc<2>
         END
     END
     
