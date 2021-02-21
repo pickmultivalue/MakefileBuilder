@@ -17,7 +17,8 @@
         RETURN 0
     END
 !
-    tempDir = fullPath:'%tmp_dir%'
+    fullPath = CHANGE(fileName, DIR_DELIM_CH:'.':DIR_DELIM_CH, DIR_DELIM_CH)
+    tempDir = OCONV(fullPath,'MCA'):'%tmp_dir%'
     EXECUTE 'CREATE-FILE DATA ':tempDir:' TYPE=UD' CAPTURING io
     OPEN tempDir TO F.target ELSE
         RETURN 0
