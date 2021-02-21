@@ -4,6 +4,7 @@
 ! by searching the current bin/lib for source
 ! then scans the source to build dependencies
 !
+$option jabba
     INCLUDE JBC.h
     EQU ctrlA TO CHAR(1), ctrlB TO CHAR(2), ctrlC TO CHAR(3)
     EQU tab TO CHAR(9)
@@ -14,6 +15,7 @@
     DEFFUN fnCONVBP2DIR()
     DEFFUN fnMOVEOBJECT()
 !
+    DEFFUN fnTRIMLAST()
     DIM A.cat(3)
     EQU A.fname  TO A.cat(1)
     EQU A.fpath TO A.cat(2)
@@ -104,12 +106,13 @@
         STOP
     END
 !
+    rc = GETENV('PWD',pwd)
     missing_files = ''
     ZUMCATS = '.':DIR_DELIM_CH:'ZUMCATS'
     BADCATS = '.':DIR_DELIM_CH:'BADCATS'
     IF NOT(fnOPEN('.', F.currdir, error)) THEN missing_files<-1> = error
     IF NOT(fnOPEN(ZUMCATS, F.zumcats, error)) THEN
-        IF scanForCatalogs THEN
+        IF NOT(scanForCatalogs) THEN
             CRT '-s option specified but ZUMCATS could not be opened'
             STOP
         END 
@@ -138,9 +141,17 @@
 !
 ! Do bin/lib discovery
 !
-    IF scanForCatalogs THEN EXECUTE 'ZUMGETCATS'
+    IF scanForCatalogs THEN
+        binpath = pwd:DIR_DELIM_CH:'bin'
+        sys = new object("$system")
+        bc = sys->getbinaries('ZUMGETCATS', 23)
+        result = sys->binaries[1]
+        binpath := DIR_SEP_CH:fnTRIMLAST(result->fullpath, DIR_DELIM_CH)
+        binpath := DIR_SEP_CH:SYSTEM(1011):DIR_DELIM_CH:'bin'
+        rc = PUTENV('PATH=':binpath)
+        EXECUTE @IM:'kZUMGETCATS'
+    END
 !
-    rc = GETENV('PWD',pwd)
     pwd = CHANGE(pwd, DIR_DELIM_CH, @AM)
     pwd_count = DCOUNT(pwd, @AM)
     binvars = ''
@@ -181,9 +192,9 @@
                 IF error THEN
                     missing_mobject<-1> = A.fname
                 END ELSE
-                    status = ''
-                    rc = IOCTL(f.var, JIOCTL_COMMAND_FILESTATUS, status)
-                    IF status<1> NE 'UD' THEN
+                    fstatus = ''
+                    rc = IOCTL(f.var, JIOCTL_COMMAND_FILESTATUS, fstatus)
+                    IF fstatus<1> NE 'UD' THEN
                         IF convertFiles THEN
                             CLOSE f.var
                             IF NOT(fnCONVBP2DIR(A.fname, f.var)) THEN
@@ -246,16 +257,16 @@
         pc = DCOUNT(progs, @SVM)
         FOR p = 1 TO pc
             prog = progs<1, 1, p>
-            LOCATE prog IN libvars BY 'AL' SETTING subr THEN
+            LOCATE prog IN libvars BY 'AL' SETTING subrpos THEN
                 libTargets<1,-1> = prog
                 fnames<4, f, p> = @TRUE
             END ELSE
                 binTargets<1, -1> = prog
-                subr = @FALSE
+                subrpos = @FALSE
             END
             includes = ''
             GOSUB processSource
-            IF subr THEN
+            IF subrpos THEN
                 libTargets<2,-1> = prog
             END ELSE
                 binTargets<2, -1> = prog
@@ -278,7 +289,7 @@
     cmd_suffix = ''
     obj_suffix = '.o'
     lib_target = 'lib.el'
-    rm_cmd = 'rm'
+    remove_cmd = 'rm'
     foundDollar = @FALSE
 !
     clean = 'libobjs':@AM:'binobjs'
@@ -373,11 +384,11 @@
         makefile<-1> = @AM:'rebuild: $(libobjs) $(binobjs)'
         makefile<-1> = rebuild
         makefile<-1> = @AM:'clean:'
-        makefile<-1> = tab:'-':rm_cmd:' /Q .':dir_delim:'lib':dir_delim:'lib*.*'
+        makefile<-1> = tab:'-':remove_cmd:' /Q .':dir_delim:'lib':dir_delim:'lib*.*'
         nbr_obj_files = DCOUNT(object_files, @AM)
         FOR f = 1 TO nbr_obj_files 
             opts = (IF m EQ 2 THEN ' /F /Q' ELSE '')
-            makefile<-1> = tab:'-':rm_cmd:opts:' .':dir_delim:object_files<f>:'*' 
+            makefile<-1> = tab:'-':remove_cmd:opts:' .':dir_delim:object_files<f>:'*' 
         NEXT f 
         IF foundDollar THEN
             FOR c = 1 TO 2
@@ -385,7 +396,7 @@
                 IF m = 1 THEN
                     cvar = '$(subst $$,\$$,':cvar:')'
                 END
-                makefile<-1> = tab:'-':rm_cmd:' ':cvar
+                makefile<-1> = tab:'-':remove_cmd:' ':cvar
             NEXT c
         END
         WRITE makefile ON F.currdir,K.Makefile
@@ -397,7 +408,7 @@
         cmd_suffix = '.exe'
         obj_suffix = '.obj'
         lib_target = 'libdef.def'
-        rm_cmd = 'del'
+        remove_cmd = 'del'
     NEXT m
     makefile = 'nmake -f Makefile.WIN32 %1 %2 %3 %4 %5 %6 %7 %8 %9'
     WRITE makefile ON F.currdir,'make.bat'

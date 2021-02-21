@@ -46,11 +46,12 @@ $option jabba
             INS path BEFORE paths<pos>
         END
     NEXT path
+    idx_offset = (IF sys->binpath[0]->index EQ 1 THEN 1 ELSE 0)
     FOR result IN sys->binaries
         IF result->$hasproperty('source') THEN
             prog = result->name
             IF LEN(prog) THEN
-                A.fpath = sys->binpath[result->index]->directory
+                A.fpath = sys->binpath[result->index-idx_offset]->directory
                 GOSUB addcat
             END
         END
