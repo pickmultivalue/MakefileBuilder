@@ -1,7 +1,7 @@
 libobjs=Functions]MOBJECT/fnCONVBP2DIR.o Functions]MOBJECT/fnDECODE.o Functions]MOBJECT/fnGETRELPATH.o Functions]MOBJECT/fnGETYN.o Functions]MOBJECT/fnLAST.o Functions]MOBJECT/fnMOVEOBJECT.o Functions]MOBJECT/fnOPEN.o Functions]MOBJECT/fnTRIMLAST.o jBC_Makefile]MOBJECT/fnPARSESOURCE.o
-binobjs=Utilities]MOBJECT/CONVBP2DIR.o Utilities]MOBJECT/move2enc.o jBC_Makefile]MOBJECT/ZUMBLDMAKE.o jBC_Makefile]MOBJECT/ZUMGETCATS.o
+binobjs=Utilities]MOBJECT/CONVBP2DIR.o jBC_Makefile]MOBJECT/ZUMBLDMAKE.o jBC_Makefile]MOBJECT/ZUMGETCATS.o
 
-alltargets=bin/CONVBP2DIR bin/move2enc bin/ZUMBLDMAKE bin/ZUMGETCATS
+alltargets=bin/CONVBP2DIR bin/ZUMBLDMAKE bin/ZUMGETCATS
 
 targets: $(alltargets) lib/lib.el
 define catlib
@@ -41,12 +41,6 @@ bin/CONVBP2DIR: Utilities]MOBJECT/CONVBP2DIR.o
 	CATALOG -o./bin Utilities CONVBP2DIR.b
 
 
-Utilities]MOBJECT/move2enc.o: Utilities/move2enc.b
-	BASIC Utilities move2enc.b
-
-bin/move2enc: Utilities]MOBJECT/move2enc.o
-	CATALOG -o./bin Utilities move2enc.b
-
 jBC_Makefile]MOBJECT/ZUMBLDMAKE.o: jBC_Makefile/ZUMBLDMAKE.b
 	BASIC jBC_Makefile ZUMBLDMAKE.b
 
@@ -67,7 +61,7 @@ lib/lib.el: Functions]MOBJECT/fnCONVBP2DIR.o Functions]MOBJECT/fnDECODE.o Functi
 
 rebuild: $(libobjs) $(binobjs)
 	CATALOG -L./lib -o./bin Functions fnCONVBP2DIR fnDECODE fnGETRELPATH fnGETYN fnLAST fnMOVEOBJECT fnOPEN fnTRIMLAST
-	CATALOG -L./lib -o./bin Utilities CONVBP2DIR move2enc
+	CATALOG -L./lib -o./bin Utilities CONVBP2DIR
 	CATALOG -L./lib -o./bin jBC_Makefile ZUMBLDMAKE ZUMGETCATS fnPARSESOURCE
 
 clean:
