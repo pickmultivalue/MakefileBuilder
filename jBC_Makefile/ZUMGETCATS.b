@@ -19,98 +19,25 @@ $option jabba
     EQU A.fpath     TO A.cat(2)
     EQU A.timestamp TO A.cat(3)
 !
+    rc = GETENV('PWD',pwd)
     rc = fnOPEN('.', F.currdir, 1)
-    READ binpaths FROM F.currdir, 'ZUMBINPATHS' ELSE STOP 202, '. ZUMBINPATHS'
-    READ libpaths FROM F.currdir, 'ZUMOBJPATHS' ELSE STOP 202, '. ZUMOBJPATHS' 
+    READ binpaths FROM F.currdir, 'ZUMBINPATHS' ELSE 
+        binpaths = pwd:DIR_DELIM_CH:'bin'
+    END
+    READ libpaths FROM F.currdir, 'ZUMOBJPATHS' ELSE
+        libpaths = pwd:DIR_DELIM_CH:'lib'
+    END
     rc = fnOPEN('.':DIR_DELIM_CH:'ZUMCATS', F.catalog, 1)
     rc = fnOPEN('.':DIR_DELIM_CH:'BADCATS', F.badcatalog, 1)
     CLEARFILE F.catalog
     CLEARFILE F.badcatalog
     badcount = 0
     openedFiles = '' 
-!    sys = new object("$system")
-!        
-    ksh = @IM:'k'
 !
-! Look through PATH to find .so files
-! (which would be the shared object version of a cataloged program)
-!
-!    win = INDEX(SYSTEM(1017), 'WIN', 1)
-!    IF win THEN
-!        libdef = 'libdef'
-!        findcmd = 'jfind'
-!        devnull = 'NUL'
-!    END ELSE
-!        libdef = 'lib' 
-!        findcmd = 'find' 
-!        devnull = '/dev/null' 
-!    END
-!    IF local THEN
-!        rc = GETCWD(pwd)
-!        paths = pwd:DIR_DELIM_CH:'bin'
-!    END ELSE
-!        rc = GETENV('PATH', paths)
-!    END
-!    findArgs = ' -name *':FILE_SUFFIX_SO:' -print 2>':devnull
-!    findBins = findcmd:' ':CHANGE(paths, DIR_SEP_CH, ' '):findArgs
-!    rc = GETENV('JBCRELEASEDIR', jbcrel)
-!    bins = ''
-!    pcnt = DCOUNT(paths, DIR_SEP_CH)
-!    FOR p = 1 TO pcnt
-!        path = FIELD(paths, DIR_SEP_CH, p)
-!        IF path EQ jbcrel:DIR_DELIM_CH:'bin' THEN CONTINUE
-!        EXECUTE ksh:findcmd:' ':path:findArgs CAPTURING progs
-!        CONVERT @CR TO '' IN progs
-!        progs = CHANGE(progs, FILE_SUFFIX_SO, '')
-!        pgcnt = DCOUNT(progs, @AM)
-!        FOR pg = 1 TO pgcnt
-!            prog = progs<pg>
-!            prog = fnLAST(prog, DIR_DELIM_CH)
-!            IF prog MATCHES "0X'_TMP_'1N0N" THEN CONTINUE
-!            IF prog MATCHES "0X'.exe'" THEN CONTINUE
-!            LOCATE prog IN bins BY 'AL' SETTING bpos ELSE
-!                INS prog BEFORE bins<bpos>
-!            END
-!        NEXT pg
-!    NEXT p
-!!
-!! Find SUBROUTINES by going through the lib.el files
-!!
-!    subs = ''
-!    IF local THEN
-!        objectpaths = pwd:DIR_DELIM_CH:'lib'
-!    END ELSE
-!        rc = GETENV('JBCOBJECTLIST', objectpaths)
-!    END
-!    pcnt = DCOUNT(objectpaths, DIR_SEP_CH)
-!    FOR p = 1 TO pcnt
-!        path = FIELD(objectpaths, DIR_SEP_CH, p)
-!        IF path EQ jbcrel:DIR_DELIM_CH:'lib' THEN CONTINUE
-!        IF NOT(fnOPEN(path, F.path, error)) THEN
-!            CRT error:
-!            error = ''
-!            CONTINUE
-!        END
-!        K.cats = libdef:FILE_SUFFIX_EL
-!        READV catalogs FROM F.path, K.cats, 1 ELSE
-!            CRT 'Cannot read ':K.cats:' from ':path
-!            CONTINUE
-!        END
-!        loc = 0
-!        LOOP
-!            REMOVE subr_id FROM catalogs AT loc SETTING delim
-!            subr_id = fnDECODE(subr_id)
-!            LOCATE subr_id IN subs BY 'AL' SETTING spos ELSE
-!                INS subr_id BEFORE subs<spos>
-!            END
-!        WHILE delim DO REPEAT
-!    NEXT p
-!
-    CRT 'Building binary list...'
+    CRT 'Building binary list...':CHAR(0):
     sys = new object("$system")
     bc = sys->getbinaries('', 23)
-    bc = sys->binaries->$size() - 1
-    CRT 'Processing ':bc:' binaries':
+    CRT sys->binaries->$size():' discovered'
     found = 0
     errors = ''
     paths = ''
@@ -127,15 +54,14 @@ $option jabba
                 GOSUB addcat
             END
         END
-    NEXT result 
+    NEXT result
     CRT
     CRT 'Found ':found:' programs'
-
-    CRT 'Building library list...'
+    CRT 
+    CRT 'Building library list...':CHAR(0):
     sys = new object("$system")
     sysm = sys->getroutines('',23)
-    bc = sys->routine->$size() - 1
-    CRT 'Processing ':bc:' libraries':
+    CRT sys->routine->$size():' discovered'
     found = 0
     errors = ''
     paths = ''
@@ -155,10 +81,6 @@ $option jabba
         END
     NEXT result 
     CRT
-!
-!    findFiles = 'find ':path:' -type f -exec grep -Iq . {} \;'
-!    findFiles:= ' -and -exec fgrep -l jFormatCode {} \;'
-!    findFiles:= '2>/dev/null|grep -v svn'
 !
     CRT 'Found ':found:' subroutines'
     IF LEN(errors) THEN

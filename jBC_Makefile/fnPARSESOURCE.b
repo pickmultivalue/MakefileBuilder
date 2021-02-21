@@ -1,8 +1,9 @@
-    FUNCTION fnPARSESOURCE(fname, F.var, K.file, xref, error)
+    FUNCTION fnPARSESOURCE(convertFiles, fname, F.var, K.file, xref, error)
 !
     INCLUDE JBC.h
     DEFFUN fnPARSESOURCE()
     DEFFUN fnOPEN()
+    DEFFUN fnCONVBP2DIR()
 !
     COMMON /fnPARSESOURCE/ include_strings, jbase_includes
     comments = '!*'
@@ -60,8 +61,10 @@
                 status = ''
                 rc = IOCTL(F.incl, JIOCTL_COMMAND_FILESTATUS, status)
                 IF status<1> NE 'UD' THEN
-                    CRT incl_file:' is not a directory'
-                    error<1, -1> = incl_file
+                    IF convertFiles AND NOT(fnCONVBP2DIR(incl_file, f.var)) THEN
+                        CRT incl_file:' is not a directory'
+                        error<1, -1> = incl_file
+                    END 
                 END
                 incl_key = incl_file:DIR_DELIM_CH:K.incl
                 LOCATE incl_key IN xref<1> BY 'AL' SETTING fpos ELSE
@@ -69,7 +72,7 @@
                     INS '' BEFORE xref<2,fpos>
                 END
 !
-                IF NOT(fnPARSESOURCE(incl_file, F.incl, K.incl, xref, error)) THEN
+                IF NOT(fnPARSESOURCE(convertFiles, incl_file, F.incl, K.incl, xref, error)) THEN
                     LOCATE K.file IN xref<2,fpos> BY 'AL' SETTING ipos ELSE
                         INS K.file BEFORE xref<2,fpos,ipos>
                     END

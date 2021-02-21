@@ -9,9 +9,13 @@
 !
     rc = IOCTL(fvar, JBC_COMMAND_GETFILENAME, fileName)
     fileName = CHANGE(fileName, pwd:DIR_DELIM_CH, '')
+    IF fileName[1,2] EQ '.':DIR_DELIM_CH THEN
+        fileName = fileName[3,999]
+    END
 !
     ampwd = CHANGE(pwd, DIR_DELIM_CH, @AM)
     pwd_count = DCOUNT(ampwd, @AM)
+    IF INDEX(fileName, '/./', 1) THEN DEBUG 
     fileName = CHANGE(fileName, DIR_DELIM_CH, @AM)
     IF COUNT(fileName, @AM) THEN
         IF fileName<1> MATCHES "1A':'" AND UPCASE(fileName<1>) = UPCASE(ampwd<1>) THEN
@@ -31,5 +35,3 @@
     END
 !
     RETURN(fileName)
-
-

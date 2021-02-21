@@ -1,4 +1,3 @@
-objdir
-*.obj
-*.dll
-*.exe
+bin
+lib
+*MOBJECT

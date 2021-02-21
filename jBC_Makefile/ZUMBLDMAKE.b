@@ -25,7 +25,7 @@
 !
 ! Check this routine's dependencies
 !
-    dependencies = 'ZUMGETCATS':@AM:'fnOPEN':@AM:'fnGETYN'
+    dependencies = 'ZUMGETCATS':@AM:'fnOPEN':@AM:'fnGETYN':@AM:'fnLAST':@AM:'fnPARSESOURCE':@AM:'fnCONVBP2DIR':@AM:'fnMOVEOBJECT'
     dc = DCOUNT(dependencies, @AM)
     missing = ''
     FOR i = 1 TO dc
@@ -58,7 +58,7 @@
         CRT '-f<makefilename> (default: Makefile)'
         CRT '-o Overwrite'
         CRT '-m Ignore missing errors'
-        CRT '-s Skip catalog discovery'
+        CRT '-s Scan for catalog discovery'
         CRT '-C Convert BP files (convert to dir, create OBJECT directory if missing)'
         CRT '-D Generate Doxygen Help'
         STOP
@@ -80,9 +80,9 @@
     END ELSE ignoreMissing = @FALSE
 !
     LOCATE '-s' IN args SETTING opos THEN
-        skipZUMCATS = @TRUE
+        scanForCatalogs = @TRUE
         DEL args<opos>
-    END ELSE skipZUMCATS = @FALSE
+    END ELSE scanForCatalogs = @FALSE
 !
     LOCATE '-v' IN args SETTING vpos THEN
         verbose = @TRUE
@@ -109,7 +109,7 @@
     BADCATS = '.':DIR_DELIM_CH:'BADCATS'
     IF NOT(fnOPEN('.', F.currdir, error)) THEN missing_files<-1> = error
     IF NOT(fnOPEN(ZUMCATS, F.zumcats, error)) THEN
-        IF skipZUMCATS THEN
+        IF scanForCatalogs THEN
             CRT '-s option specified but ZUMCATS could not be opened'
             STOP
         END 
@@ -138,7 +138,7 @@
 !
 ! Do bin/lib discovery
 !
-    IF NOT(skipZUMCATS) THEN EXECUTE 'ZUMGETCATS -l'
+    IF scanForCatalogs THEN EXECUTE 'ZUMGETCATS'
 !
     rc = GETENV('PWD',pwd)
     pwd = CHANGE(pwd, DIR_DELIM_CH, @AM)
@@ -401,7 +401,7 @@
     NEXT m
     makefile = 'nmake -f Makefile.WIN32 %1 %2 %3 %4 %5 %6 %7 %8 %9'
     WRITE makefile ON F.currdir,'make.bat'
-    CRT 'Created make.bat, Makefile{.WIN32}'
+    CRT 'Created make.bat and Makefile{.WIN32}'
 !
     STOP
 !
@@ -416,14 +416,16 @@ checkMissing:
 processSource:
 !
     missing_inc = ''
-    rc = fnPARSESOURCE(fname, fvars(rpos), prog, includes, missing_inc)
-    IF LEN(missing_inc) THEN
-        missing_code<-1> = 'Code ':fname:',':prog
-        IF LEN(missing_inc<1>) THEN
-            missing_code<-1> = "Include files that couldn't be opened:":@AM:missing_inc<1>
-        END
-        IF LEN(missing_inc<2>) THEN
-            missing_code<-1> = "Includes that couldn't be read:":@AM:missing_inc<2>
+    rc = fnPARSESOURCE(convertFiles, fname, fvars(rpos), prog, includes, missing_inc)
+    IF rc THEN
+        IF LEN(missing_inc) THEN
+            missing_code<-1> = 'Code ':fname:',':prog
+            IF LEN(missing_inc<1>) THEN
+                missing_code<-1> = "Include files that couldn't be opened:":@AM:missing_inc<1>
+            END
+            IF LEN(missing_inc<2>) THEN
+                missing_code<-1> = "Includes that couldn't be read:":@AM:missing_inc<2>
+            END
         END
     END
     
