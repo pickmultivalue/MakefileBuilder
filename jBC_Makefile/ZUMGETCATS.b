@@ -98,7 +98,6 @@ $option jabba
     END
     STOP
 addcat:
-    
     LOCATE A.fpath IN paths BY 'AL' SETTING ok ELSE RETURN
 
     rc = IOCTL(F.catalog, JIOCTL_COMMAND_FINDRECORD, prog)
@@ -125,6 +124,10 @@ addcat:
             A.fname = CHANGE(A.fname, DIR_DELIM_CH:'.', '')
         END ELSE A.fname = '' 
         INS A.fname BEFORE openedFiles<2,fpos>
+        IF (A.fname 'R#2') EQ ']D' THEN
+            errors<-1> = A.fname:' derived in error'
+            RETURN
+        END 
     END
     A.timestamp = FIELD(result->version, ' ', 6, 99)
     MATWRITE A.cat ON F.catalog, prog ON ERROR

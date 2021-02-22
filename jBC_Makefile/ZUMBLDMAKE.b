@@ -4,7 +4,7 @@
 ! by searching the current bin/lib for source
 ! then scans the source to build dependencies
 !
-$option jabba
+$option jabba 
     INCLUDE JBC.h
     EQU ctrlA TO CHAR(1), ctrlB TO CHAR(2), ctrlC TO CHAR(3)
     EQU tab TO CHAR(9)
@@ -388,7 +388,11 @@ $option jabba
         nbr_obj_files = DCOUNT(object_files, @AM)
         FOR f = 1 TO nbr_obj_files 
             opts = (IF m EQ 2 THEN ' /F /Q' ELSE '')
-            makefile<-1> = tab:'-':remove_cmd:opts:' .':dir_delim:object_files<f>:'*' 
+            obj_dir = object_files<f>
+            IF obj_dir[1,1] NE dir_delim THEN
+                obj_dir = '.':dir_delim:obj_dir
+            END 
+            makefile<-1> = tab:'-':remove_cmd:opts:' ':obj_dir:'*' 
         NEXT f 
         IF foundDollar THEN
             FOR c = 1 TO 2
