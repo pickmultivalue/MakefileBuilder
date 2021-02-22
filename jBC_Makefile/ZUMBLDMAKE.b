@@ -384,10 +384,10 @@ $option jabba
         makefile<-1> = @AM:'rebuild: $(libobjs) $(binobjs)'
         makefile<-1> = rebuild
         makefile<-1> = @AM:'clean:'
-        makefile<-1> = tab:'-':remove_cmd:' /Q .':dir_delim:'lib':dir_delim:'lib*.*'
+        makefile<-1> = tab:'-':remove_cmd:' .':dir_delim:'lib':dir_delim:'lib*.*'
         nbr_obj_files = DCOUNT(object_files, @AM)
         FOR f = 1 TO nbr_obj_files 
-            opts = (IF m EQ 2 THEN ' /F /Q' ELSE '')
+            opts = (IF m EQ 2 THEN ' /F' ELSE '')
             obj_dir = object_files<f>
             IF obj_dir[1,1] NE dir_delim THEN
                 obj_dir = '.':dir_delim:obj_dir
@@ -412,7 +412,7 @@ $option jabba
         cmd_suffix = '.exe'
         obj_suffix = '.obj'
         lib_target = 'libdef.def'
-        remove_cmd = 'del'
+        remove_cmd = 'del /Q'
     NEXT m
     makefile = 'nmake -f Makefile.WIN32 %1 %2 %3 %4 %5 %6 %7 %8 %9'
     WRITE makefile ON F.currdir,'make.bat'
