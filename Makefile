@@ -1,7 +1,7 @@
 libobjs=Functions]MOBJECT/fnCONVBP2DIR.o Functions]MOBJECT/fnDECODE.o Functions]MOBJECT/fnGETRELPATH.o Functions]MOBJECT/fnGETYN.o Functions]MOBJECT/fnLAST.o Functions]MOBJECT/fnMOVEOBJECT.o Functions]MOBJECT/fnOPEN.o Functions]MOBJECT/fnTRIMLAST.o jBC_Makefile]MOBJECT/fnPARSESOURCE.o
-binobjs=Utilities]MOBJECT/CONVBP2DIR.o jBC_Makefile]MOBJECT/ZUMBLDMAKE.o jBC_Makefile]MOBJECT/ZUMGETCATS.o
+binobjs=Utilities]MOBJECT/CONVBP2DIR.o Utilities]MOBJECT/ZUMCATALOG.o jBC_Makefile]MOBJECT/ZUMBLDMAKE.o jBC_Makefile]MOBJECT/ZUMGETCATS.o
 
-alltargets=bin/CONVBP2DIR bin/ZUMBLDMAKE bin/ZUMGETCATS
+alltargets=./bin/CONVBP2DIR ./bin/ZUMCATALOG ./bin/ZUMBLDMAKE ./bin/ZUMGETCATS
 
 targets: $(alltargets) lib/lib.el
 define catlib
@@ -37,20 +37,25 @@ Functions]MOBJECT/fnTRIMLAST.o: Functions/fnTRIMLAST.b
 Utilities]MOBJECT/CONVBP2DIR.o: Utilities/CONVBP2DIR.b
 	BASIC Utilities CONVBP2DIR.b
 
-bin/CONVBP2DIR: Utilities]MOBJECT/CONVBP2DIR.o
+./bin/CONVBP2DIR: Utilities]MOBJECT/CONVBP2DIR.o
 	CATALOG -o./bin Utilities CONVBP2DIR.b
 
+Utilities]MOBJECT/ZUMCATALOG.o: Utilities/ZUMCATALOG.b
+	BASIC Utilities ZUMCATALOG.b
+
+./bin/ZUMCATALOG: Utilities]MOBJECT/ZUMCATALOG.o
+	CATALOG -o./bin Utilities ZUMCATALOG.b
 
 jBC_Makefile]MOBJECT/ZUMBLDMAKE.o: jBC_Makefile/ZUMBLDMAKE.b
 	BASIC jBC_Makefile ZUMBLDMAKE.b
 
-bin/ZUMBLDMAKE: jBC_Makefile]MOBJECT/ZUMBLDMAKE.o
+./bin/ZUMBLDMAKE: jBC_Makefile]MOBJECT/ZUMBLDMAKE.o
 	CATALOG -o./bin jBC_Makefile ZUMBLDMAKE.b
 
 jBC_Makefile]MOBJECT/ZUMGETCATS.o: jBC_Makefile/ZUMGETCATS.b
 	BASIC jBC_Makefile ZUMGETCATS.b
 
-bin/ZUMGETCATS: jBC_Makefile]MOBJECT/ZUMGETCATS.o
+./bin/ZUMGETCATS: jBC_Makefile]MOBJECT/ZUMGETCATS.o
 	CATALOG -o./bin jBC_Makefile ZUMGETCATS.b
 
 jBC_Makefile]MOBJECT/fnPARSESOURCE.o: jBC_Makefile/fnPARSESOURCE.b
@@ -61,11 +66,11 @@ lib/lib.el: Functions]MOBJECT/fnCONVBP2DIR.o Functions]MOBJECT/fnDECODE.o Functi
 
 rebuild: $(libobjs) $(binobjs)
 	CATALOG -L./lib -o./bin Functions fnCONVBP2DIR fnDECODE fnGETRELPATH fnGETYN fnLAST fnMOVEOBJECT fnOPEN fnTRIMLAST
-	CATALOG -L./lib -o./bin Utilities CONVBP2DIR
+	CATALOG -L./lib -o./bin Utilities CONVBP2DIR ZUMCATALOG
 	CATALOG -L./lib -o./bin jBC_Makefile ZUMBLDMAKE ZUMGETCATS fnPARSESOURCE
 
 clean:
-	-rm /Q ./lib/lib*.*
+	-rm ./lib/lib*.*
 	-rm ./Functions]MOBJECT/*
 	-rm ./Utilities]MOBJECT/*
 	-rm ./jBC_Makefile]MOBJECT/*

@@ -266,6 +266,7 @@ $option jabba
             END
             includes = ''
             GOSUB processSource
+            IF NOT(rc) THEN CONTINUE 
             IF subrpos THEN
                 libTargets<2,-1> = prog
             END ELSE
