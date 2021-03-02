@@ -299,7 +299,7 @@ $option jabba
     FOR m = 1 TO 2
         libc = 1
         binc = 1 
-        phony = '' 
+        phony = ''
         targets = ''
         libs = ''
         bins= ''
@@ -308,11 +308,12 @@ $option jabba
         rebuild = ''
         object_files = ''
         IF m EQ 1 THEN
-            makefile<-1> = 'define catlib'
+            makefile<-1> = @AM:'define catlib'
             makefile<-1> = 'echo "" $(foreach fname,$(?),&& CATALOG -L./lib $(firstword $(subst /, ,$(fname))) $(word 2,$(subst /, ,$(fname))))'
             makefile<-1> = 'endef'
         END
         makefile<-1> = @AM:'all: targets'
+        phony<-1> = 'all'
         FOR f = 1 TO fc
             fname = fnames<1, f>
             progs = fnames<2, f>
@@ -386,17 +387,20 @@ $option jabba
         libs = fnSPLITSENT(libs, word_lim)
         libc = DCOUNT(libs, @AM)
         libtarget := ':'
+        libmake = tab:'make'
         FOR lc = 1 TO libc
             liblabel = 'libs':lc
-            makefile<-1> = @AM:liblabel:': ':libs<lc>
+            libdepend = '$(libobj':lc:')'
+            makefile<-1> = @AM:liblabel:': ':libdepend
             IF m EQ 1 THEN
                 makefile<-1> = tab:'$(catlib)'
             END ELSE
                 makefile<-1> = catsubs<lc> 
             END
-            libtarget := ' ':liblabel
+            libtarget := ' ':libdepend
+            libmake := ' ':liblabel
         NEXT lc
-        makefile<-1> = @AM:libtarget
+        makefile<-1> = @AM:libtarget:@AM:libmake 
         libtarget = FIELD(libtarget, ':', 1) 
         libs = fnSPLITSENT(libs, word_lim)
         lc = DCOUNT(libs, @AM)
@@ -408,15 +412,16 @@ $option jabba
         NEXT lib
         targets = fnSPLITSENT(targets, word_lim)
         lc = DCOUNT(targets, @AM)
-        alltargets = ''
-        FOR lib = lc TO 1 STEP -1
-            targetobjvar = 'targetobj':target
-            INS @AM:targetobjvar:'=':targets<target> BEFORE makefile<1>
-            alltargets := ' ':targetobjvar
+        allbins = ''
+        FOR target = lc TO 1 STEP -1
+            targetbinvar = 'bin':target
+            INS @AM:targetbinvar:'=':targets<target> BEFORE makefile<1>
+            allbins := ' ':targetbinvar
         NEXT lib
-        INS @AM:'targets: $(alltargets) ':libtarget BEFORE makefile<1>
-        alltargets = 'alltargets=':alltargets
-        INS @AM:alltargets BEFORE makefile<1>
+        INS @AM:'targets: $(allbins) ':libtarget BEFORE makefile<1>
+        phony<-1> = 'targets'
+        allbins = 'allbins=':TRIM(allbins)
+        INS @AM:allbins BEFORE makefile<1>
         bins = fnSPLITSENT(bins, word_lim)
         lc = DCOUNT(bins, @AM)
         binobjs = 'binobjs=':
@@ -428,8 +433,10 @@ $option jabba
         INS binobjs BEFORE makefile<1>
         INS libobjs BEFORE makefile<1>
         makefile<-1> = @AM:'rebuild: $(libobjs) $(binobjs)'
+        phony<-1> = 'rebuild'
         makefile<-1> = rebuild
         makefile<-1> = @AM:'clean:'
+        phony<-1> = 'clean'
         makefile<-1> = tab:'-':remove_cmd:' .':dir_delim:'lib':dir_delim:'lib*.*'
         nbr_obj_files = DCOUNT(object_files, @AM)
         FOR f = 1 TO nbr_obj_files 
@@ -449,6 +456,7 @@ $option jabba
                 makefile<-1> = tab:'-':remove_cmd:' ':cvar
             NEXT c
         END
+        INS '.PHONY : ':CHANGE(phony, @AM, ' '):@AM BEFORE makefile<1> 
         WRITE makefile ON F.currdir,K.Makefile
 !
 ! Windows settings
