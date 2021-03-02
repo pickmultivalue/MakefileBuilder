@@ -1,7 +1,7 @@
-libobjs=Functions]MOBJECT\fnCONVBP2DIR.obj Functions]MOBJECT\fnDECODE.obj Functions]MOBJECT\fnGETRELPATH.obj Functions]MOBJECT\fnGETYN.obj Functions]MOBJECT\fnLAST.obj Functions]MOBJECT\fnMOVEOBJECT.obj Functions]MOBJECT\fnOPEN.obj Functions]MOBJECT\fnTRIMLAST.obj jBC_Makefile]MOBJECT\fnPARSESOURCE.obj
-binobjs=Utilities]MOBJECT\CONVBP2DIR.obj Utilities]MOBJECT\ZUMCATALOG.obj jBC_Makefile]MOBJECT\ZUMBLDMAKE.obj jBC_Makefile]MOBJECT\ZUMGETCATS.obj
+libobjs=Functions]MOBJECT\fnCONVBP2DIR.obj Functions]MOBJECT\fnDECODE.obj Functions]MOBJECT\fnGETCATS.obj Functions]MOBJECT\fnGETRELPATH.obj Functions]MOBJECT\fnGETYN.obj Functions]MOBJECT\fnLAST.obj Functions]MOBJECT\fnMOVEOBJECT.obj Functions]MOBJECT\fnOPEN.obj Functions]MOBJECT\fnTRIMLAST.obj jBC_Makefile]MOBJECT\fnPARSESOURCE.obj
+binobjs=Utilities]MOBJECT\CONVBP2DIR.obj Utilities]MOBJECT\ZUMBASIC.obj Utilities]MOBJECT\ZUMCATALOG.obj Utilities]MOBJECT\ZUMCATEXEC.obj jBC_Makefile]MOBJECT\ZUMBLDMAKE.obj jBC_Makefile]MOBJECT\ZUMGETCATS.obj
 
-alltargets=.\bin\CONVBP2DIR.exe .\bin\ZUMCATALOG.exe .\bin\ZUMBLDMAKE.exe .\bin\ZUMGETCATS.exe
+alltargets=.\bin\CONVBP2DIR.exe .\bin\ZUMBASIC.exe .\bin\ZUMCATALOG.exe .\bin\ZUMCATEXEC.exe .\bin\ZUMBLDMAKE.exe .\bin\ZUMGETCATS.exe
 
 targets: $(alltargets) lib\libdef.def
 
@@ -12,6 +12,9 @@ Functions]MOBJECT\fnCONVBP2DIR.obj: Functions\fnCONVBP2DIR.b
 
 Functions]MOBJECT\fnDECODE.obj: Functions\fnDECODE.b
 	BASIC Functions fnDECODE.b
+
+Functions]MOBJECT\fnGETCATS.obj: Functions\fnGETCATS.b
+	BASIC Functions fnGETCATS.b
 
 Functions]MOBJECT\fnGETRELPATH.obj: Functions\fnGETRELPATH.b
 	BASIC Functions fnGETRELPATH.b
@@ -37,11 +40,23 @@ Utilities]MOBJECT\CONVBP2DIR.obj: Utilities\CONVBP2DIR.b
 .\bin\CONVBP2DIR.exe: Utilities]MOBJECT\CONVBP2DIR.obj
 	CATALOG -o.\bin Utilities CONVBP2DIR.b
 
+Utilities]MOBJECT\ZUMBASIC.obj: Utilities\ZUMBASIC.b
+	BASIC Utilities ZUMBASIC.b
+
+.\bin\ZUMBASIC.exe: Utilities]MOBJECT\ZUMBASIC.obj
+	CATALOG -o.\bin Utilities ZUMBASIC.b
+
 Utilities]MOBJECT\ZUMCATALOG.obj: Utilities\ZUMCATALOG.b
 	BASIC Utilities ZUMCATALOG.b
 
 .\bin\ZUMCATALOG.exe: Utilities]MOBJECT\ZUMCATALOG.obj
 	CATALOG -o.\bin Utilities ZUMCATALOG.b
+
+Utilities]MOBJECT\ZUMCATEXEC.obj: Utilities\ZUMCATEXEC.b
+	BASIC Utilities ZUMCATEXEC.b
+
+.\bin\ZUMCATEXEC.exe: Utilities]MOBJECT\ZUMCATEXEC.obj
+	CATALOG -o.\bin Utilities ZUMCATEXEC.b
 
 jBC_Makefile]MOBJECT\ZUMBLDMAKE.obj: jBC_Makefile\ZUMBLDMAKE.b
 	BASIC jBC_Makefile ZUMBLDMAKE.b
@@ -58,13 +73,13 @@ jBC_Makefile]MOBJECT\ZUMGETCATS.obj: jBC_Makefile\ZUMGETCATS.b
 jBC_Makefile]MOBJECT\fnPARSESOURCE.obj: jBC_Makefile\fnPARSESOURCE.b
 	BASIC jBC_Makefile fnPARSESOURCE.b
 
-lib\libdef.def: Functions]MOBJECT\fnCONVBP2DIR.obj Functions]MOBJECT\fnDECODE.obj Functions]MOBJECT\fnGETRELPATH.obj Functions]MOBJECT\fnGETYN.obj Functions]MOBJECT\fnLAST.obj Functions]MOBJECT\fnMOVEOBJECT.obj Functions]MOBJECT\fnOPEN.obj Functions]MOBJECT\fnTRIMLAST.obj jBC_Makefile]MOBJECT\fnPARSESOURCE.obj
-	CATALOG -L.\lib Functions fnCONVBP2DIR.b fnDECODE.b fnGETRELPATH.b fnGETYN.b fnLAST.b fnMOVEOBJECT.b fnOPEN.b fnTRIMLAST.b
+lib\libdef.def: Functions]MOBJECT\fnCONVBP2DIR.obj Functions]MOBJECT\fnDECODE.obj Functions]MOBJECT\fnGETCATS.obj Functions]MOBJECT\fnGETRELPATH.obj Functions]MOBJECT\fnGETYN.obj Functions]MOBJECT\fnLAST.obj Functions]MOBJECT\fnMOVEOBJECT.obj Functions]MOBJECT\fnOPEN.obj Functions]MOBJECT\fnTRIMLAST.obj jBC_Makefile]MOBJECT\fnPARSESOURCE.obj
+	CATALOG -L.\lib Functions fnCONVBP2DIR.b fnDECODE.b fnGETCATS.b fnGETRELPATH.b fnGETYN.b fnLAST.b fnMOVEOBJECT.b fnOPEN.b fnTRIMLAST.b
 	CATALOG -L.\lib jBC_Makefile fnPARSESOURCE.b
 
 rebuild: $(libobjs) $(binobjs)
-	CATALOG -L.\lib -o.\bin Functions fnCONVBP2DIR fnDECODE fnGETRELPATH fnGETYN fnLAST fnMOVEOBJECT fnOPEN fnTRIMLAST
-	CATALOG -L.\lib -o.\bin Utilities CONVBP2DIR ZUMCATALOG
+	CATALOG -L.\lib -o.\bin Functions fnCONVBP2DIR fnDECODE fnGETCATS fnGETRELPATH fnGETYN fnLAST fnMOVEOBJECT fnOPEN fnTRIMLAST
+	CATALOG -L.\lib -o.\bin Utilities CONVBP2DIR ZUMBASIC ZUMCATALOG ZUMCATEXEC
 	CATALOG -L.\lib -o.\bin jBC_Makefile ZUMBLDMAKE ZUMGETCATS fnPARSESOURCE
 
 clean:

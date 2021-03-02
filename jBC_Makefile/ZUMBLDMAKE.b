@@ -16,18 +16,20 @@ $option jabba
     DEFFUN fnMOVEOBJECT()
 !
     DEFFUN fnTRIMLAST()
+    DEFFUN fnSPLITSENT()
     DIM A.cat(3)
     EQU A.fname  TO A.cat(1)
     EQU A.fpath TO A.cat(2)
     EQU A.timestamp TO A.cat(3)
 !
+    EQU word_lim TO 20 
     DIM fvars(1000)
     fnames = ''
     relnames = ''
 !
 ! Check this routine's dependencies
 !
-    dependencies = 'ZUMGETCATS':@AM:'fnOPEN':@AM:'fnGETYN':@AM:'fnLAST':@AM:'fnPARSESOURCE':@AM:'fnCONVBP2DIR':@AM:'fnMOVEOBJECT'
+    dependencies = 'ZUMGETCATS':@AM:'fnOPEN':@AM:'fnGETYN':@AM:'fnLAST':@AM:'fnPARSESOURCE':@AM:'fnCONVBP2DIR':@AM:'fnMOVEOBJECT':@AM:'fnSPLITSENT' 
     dc = DCOUNT(dependencies, @AM)
     missing = ''
     FOR i = 1 TO dc
@@ -295,6 +297,9 @@ $option jabba
 !
     clean = 'libobjs':@AM:'binobjs'
     FOR m = 1 TO 2
+        libc = 1
+        binc = 1 
+        phony = '' 
         targets = ''
         libs = ''
         bins= ''
@@ -366,21 +371,61 @@ $option jabba
             NEXT p
             subs = TRIM(CHANGE(subs, @AM, ' '))
             IF m EQ 2 AND LEN(subs) THEN
-                catsubs<-1> = tab:'CATALOG -L.':dir_delim:'lib ':fname:' ':subs
+                subs = fnSPLITSENT(subs, word_lim)
+                subc = DCOUNT(subs, @AM)
+                FOR sc = 1 TO subc
+                    catsubs<-1> = tab:'CATALOG -L.':dir_delim:'lib ':fname:' ':subs<sc> 
+                NEXT sc
             END
-            rebuild<-1> = tab:'CATALOG -L.':dir_delim:'lib -o.':dir_delim:'bin ':fname:' ':CHANGE(progs<1, 1>, @SVM, ' ')
+            progs = fnSPLITSENT(progs<1, 1>, word_lim)
+            progc = DCOUNT(progs, @AM)
+            FOR pc = 1 TO progc
+                rebuild<-1> = tab:'CATALOG -L.':dir_delim:'lib -o.':dir_delim:'bin ':fname:' ':progs<pc>
+            NEXT pc
         NEXT f
-        makefile<-1> = @AM:libtarget:': ':CHANGE(libs, @AM, ' ')
-        IF m EQ 1 THEN
-            makefile<-1> = tab:'$(catlib)'
-        END ELSE
-            makefile<-1> = catsubs
-        END
-        libobjs = 'libobjs=':CHANGE(libs, @AM, ' ')
-        targets = 'alltargets=':CHANGE(targets, @AM, ' ')
+        libs = fnSPLITSENT(libs, word_lim)
+        libc = DCOUNT(libs, @AM)
+        libtarget := ':'
+        FOR lc = 1 TO libc
+            liblabel = 'libs':lc
+            makefile<-1> = @AM:liblabel:': ':libs<lc>
+            IF m EQ 1 THEN
+                makefile<-1> = tab:'$(catlib)'
+            END ELSE
+                makefile<-1> = catsubs<lc> 
+            END
+            libtarget := ' ':liblabel
+        NEXT lc
+        makefile<-1> = @AM:libtarget
+        libtarget = FIELD(libtarget, ':', 1) 
+        libs = fnSPLITSENT(libs, word_lim)
+        lc = DCOUNT(libs, @AM)
+        libobjs = 'libobjs=':
+        FOR lib = lc TO 1 STEP -1
+            libobjvar = 'libobj':lib
+            INS @AM:libobjvar:'=':libs<lib> BEFORE makefile<1>
+            libobjs := libobjvar:' '
+        NEXT lib
+        targets = fnSPLITSENT(targets, word_lim)
+        lc = DCOUNT(targets, @AM)
+        alltargets = ''
+        FOR lib = lc TO 1 STEP -1
+            targetobjvar = 'targetobj':target
+            INS @AM:targetobjvar:'=':targets<target> BEFORE makefile<1>
+            alltargets := ' ':targetobjvar
+        NEXT lib
         INS @AM:'targets: $(alltargets) ':libtarget BEFORE makefile<1>
-        INS @AM:targets BEFORE makefile<1>
-        INS 'binobjs=':CHANGE(bins, @AM, ' ') BEFORE makefile<1>
+        alltargets = 'alltargets=':alltargets
+        INS @AM:alltargets BEFORE makefile<1>
+        bins = fnSPLITSENT(bins, word_lim)
+        lc = DCOUNT(bins, @AM)
+        binobjs = 'binobjs=':
+        FOR bin = lc TO 1 STEP -1
+            binobjvar = 'binobj':bin
+            INS @AM:binobjvar:'=':bins<bin> BEFORE makefile<1>
+            binobjs := binobjvar:' '
+        NEXT lib
+        INS binobjs BEFORE makefile<1>
         INS libobjs BEFORE makefile<1>
         makefile<-1> = @AM:'rebuild: $(libobjs) $(binobjs)'
         makefile<-1> = rebuild
