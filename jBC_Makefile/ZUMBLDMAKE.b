@@ -4,7 +4,7 @@
 ! by searching the current bin/lib for source
 ! then scans the source to build dependencies
 !
-$option jabba 
+    $option jabba
     INCLUDE JBC.h
     EQU ctrlA TO CHAR(1), ctrlB TO CHAR(2), ctrlC TO CHAR(3)
     EQU tab TO CHAR(9)
@@ -22,14 +22,14 @@ $option jabba
     EQU A.fpath TO A.cat(2)
     EQU A.timestamp TO A.cat(3)
 !
-    EQU word_lim TO 20 
+    EQU word_lim TO 20
     DIM fvars(1000)
     fnames = ''
     relnames = ''
 !
 ! Check this routine's dependencies
 !
-    dependencies = 'ZUMGETCATS':@AM:'fnOPEN':@AM:'fnGETYN':@AM:'fnLAST':@AM:'fnPARSESOURCE':@AM:'fnCONVBP2DIR':@AM:'fnMOVEOBJECT':@AM:'fnSPLITSENT' 
+    dependencies = 'ZUMGETCATS':@AM:'fnOPEN':@AM:'fnGETYN':@AM:'fnLAST':@AM:'fnPARSESOURCE':@AM:'fnCONVBP2DIR':@AM:'fnMOVEOBJECT':@AM:'fnSPLITSENT'
     dc = DCOUNT(dependencies, @AM)
     missing = ''
     FOR i = 1 TO dc
@@ -117,7 +117,7 @@ $option jabba
         IF NOT(scanForCatalogs) THEN
             CRT '-s option specified but ZUMCATS could not be opened'
             STOP
-        END 
+        END
         question = 'Create ZUMCATS file for building catalog list'
         IF fnGETYN(question, 'Y':@VM:'N') EQ 'Y' THEN
             error = ''
@@ -268,7 +268,7 @@ $option jabba
             END
             includes = ''
             GOSUB processSource
-            IF NOT(rc) THEN CONTINUE 
+            IF NOT(rc) THEN CONTINUE
             IF subrpos THEN
                 libTargets<2,-1> = prog
             END ELSE
@@ -298,21 +298,24 @@ $option jabba
     clean = 'libobjs':@AM:'binobjs'
     FOR m = 1 TO 2
         libc = 1
-        binc = 1 
+        binc = 1
         phony = ''
+        makeinit = ''
+        makelabels = ''
+        makemakes = ''
+        makewrapup = ''
         targets = ''
         libs = ''
         bins= ''
         catsubs = ''
-        makefile = ''
         rebuild = ''
         object_files = ''
         IF m EQ 1 THEN
-            makefile<-1> = @AM:'define catlib'
-            makefile<-1> = 'echo "" $(foreach fname,$(?),&& CATALOG -L./lib $(firstword $(subst /, ,$(fname))) $(word 2,$(subst /, ,$(fname))))'
-            makefile<-1> = 'endef'
+            makeinit<-1> = @AM:'define catlib'
+            makeinit<-1> = 'echo "" $(foreach fname,$(?),&& CATALOG -L./lib $(firstword $(subst /, ,$(fname))) $(word 2,$(subst /, ,$(fname))))'
+            makeinit<-1> = 'endef'
         END
-        makefile<-1> = @AM:'all: targets'
+        makelabels<-1> = @AM:'all: targets'
         phony<-1> = 'all'
         FOR f = 1 TO fc
             fname = fnames<1, f>
@@ -324,14 +327,15 @@ $option jabba
                 fname = fname[LEN(curr_dir)+1, 999]
             END
             subs = ''
+            exes = ''
             objfile = fname:']MOBJECT'
             OPEN objfile TO f.object THEN
                 objfile:= dir_delim
                 object_files<-1> = objfile
-            END ELSE 
+            END ELSE
                 objfile = ''
                 CRT 'WARNING: ':objfile:' not available. Makefile will be incomplete'
-            END 
+            END
             libtarget = 'lib':dir_delim:lib_target
             pc = DCOUNT(progs, @SVM)
             FOR p = 1 TO pc
@@ -356,17 +360,18 @@ $option jabba
                 END
                 IF LEN(objfile) THEN
                     object = objfile:object
-                    makefile<-1> = @AM:object:': ':dependency
-                    makefile<-1> = tab:'BASIC ':fname:' ':source
+                    makemakes<-1> = @AM:object:': ':dependency
+                    makemakes<-1> = tab:'BASIC ':fname:' ':source
                     IF flag THEN
                         libs<-1> = object
                         subs<-1> = source
                     END ELSE
+                        exes<-1> = source
                         bins<-1> = object
                         target = '.':dir_delim:'bin':dir_delim:target:cmd_suffix
                         targets<-1> = target
-                        makefile<-1> = @AM:target:': ':object
-                        makefile<-1> = tab:'CATALOG -o.':dir_delim:'bin ':fname:' ':source
+                        makemakes<-1> = @AM:target:': ':object
+                        makemakes<-1> = tab:'CATALOG -o.':dir_delim:'bin ':fname:' ':source
                     END
                 END
             NEXT p
@@ -375,13 +380,14 @@ $option jabba
                 subs = fnSPLITSENT(subs, word_lim)
                 subc = DCOUNT(subs, @AM)
                 FOR sc = 1 TO subc
-                    catsubs<-1> = tab:'CATALOG -L.':dir_delim:'lib ':fname:' ':subs<sc> 
+                    catsubs<-1> = tab:'CATALOG -L.':dir_delim:'lib ':fname:' ':subs<sc>
+                    rebuild<-1> = tab:'CATALOG -L.':dir_delim:'lib ':fname:' ':subs<sc>
                 NEXT sc
             END
-            progs = fnSPLITSENT(progs<1, 1>, word_lim)
+            progs = fnSPLITSENT(exes, word_lim)
             progc = DCOUNT(progs, @AM)
             FOR pc = 1 TO progc
-                rebuild<-1> = tab:'CATALOG -L.':dir_delim:'lib -o.':dir_delim:'bin ':fname:' ':progs<pc>
+                rebuild<-1> = tab:'CATALOG -o.':dir_delim:'bin ':fname:' ':progs<pc>
             NEXT pc
         NEXT f
         libs = fnSPLITSENT(libs, word_lim)
@@ -391,72 +397,75 @@ $option jabba
         FOR lc = 1 TO libc
             liblabel = 'libs':lc
             libdepend = '$(libobj':lc:')'
-            makefile<-1> = @AM:liblabel:': ':libdepend
+            makemakes<-1> = @AM:liblabel:': ':libdepend
             IF m EQ 1 THEN
-                makefile<-1> = tab:'$(catlib)'
-            END ELSE
-                makefile<-1> = catsubs<lc> 
+                makemakes<-1> = tab:'$(catlib)'
             END
             libtarget := ' ':libdepend
             libmake := ' ':liblabel
         NEXT lc
-        makefile<-1> = @AM:libtarget:@AM:libmake 
-        libtarget = FIELD(libtarget, ':', 1) 
+        IF m EQ 2 THEN
+            makemakes<-1> = catsubs
+        END
+        makemakes<-1> = @AM:libtarget:@AM:libmake
+        libtarget = FIELD(libtarget, ':', 1)
         libs = fnSPLITSENT(libs, word_lim)
         lc = DCOUNT(libs, @AM)
         libobjs = 'libobjs=':
         FOR lib = lc TO 1 STEP -1
             libobjvar = 'libobj':lib
-            INS @AM:libobjvar:'=':libs<lib> BEFORE makefile<1>
-            libobjs := libobjvar:' '
+            makeinit<-1> = libobjvar:'=':libs<lib>
+            libobjs := '$(':libobjvar:') '
         NEXT lib
         targets = fnSPLITSENT(targets, word_lim)
+        makelabels<-1> = @AM:'targets: allbins alllibs'
+        alllibs = 'alllibs: $(libobjs)'
+        alllibs<-1> = tab:'make ':libtarget
+        allbins = tab:'make'
         lc = DCOUNT(targets, @AM)
-        allbins = ''
         FOR target = lc TO 1 STEP -1
             targetbinvar = 'bin':target
-            INS @AM:targetbinvar:'=':targets<target> BEFORE makefile<1>
-            allbins := ' ':targetbinvar
+            makeinit<-1> = targetbinvar:'=':targets<target>
+            allbins := ' $(':targetbinvar:')'
         NEXT lib
-        INS @AM:'targets: $(allbins) ':libtarget BEFORE makefile<1>
         phony<-1> = 'targets'
-        allbins = 'allbins=':TRIM(allbins)
-        INS @AM:allbins BEFORE makefile<1>
+        makelabels<-1> = @AM:'allbins: $(binobjs)'
+        makelabels<-1> = allbins
         bins = fnSPLITSENT(bins, word_lim)
         lc = DCOUNT(bins, @AM)
         binobjs = 'binobjs=':
         FOR bin = lc TO 1 STEP -1
             binobjvar = 'binobj':bin
-            INS @AM:binobjvar:'=':bins<bin> BEFORE makefile<1>
-            binobjs := binobjvar:' '
+            makeinit<-1> = binobjvar:'=':bins<bin>
+            binobjs := '$(':binobjvar:') '
         NEXT lib
-        INS binobjs BEFORE makefile<1>
-        INS libobjs BEFORE makefile<1>
-        makefile<-1> = @AM:'rebuild: $(libobjs) $(binobjs)'
-        phony<-1> = 'rebuild'
-        makefile<-1> = rebuild
-        makefile<-1> = @AM:'clean:'
-        phony<-1> = 'clean'
-        makefile<-1> = tab:'-':remove_cmd:' .':dir_delim:'lib':dir_delim:'lib*.*'
+        INS TRIM(binobjs) BEFORE makeinit<-1>
+        INS TRIM(libobjs) BEFORE makeinit<-1>
+        makeinit<-1> = @AM:alllibs
+        makewrapup<-1> = @AM:'rebuild: $(libobjs) $(binobjs)'
+        makewrapup<-1> = rebuild
+        makewrapup<-1> = @AM:'clean:'
+        makewrapup<-1> = tab:'-':remove_cmd:' .':dir_delim:'lib':dir_delim:'lib*.*'
         nbr_obj_files = DCOUNT(object_files, @AM)
-        FOR f = 1 TO nbr_obj_files 
+        FOR f = 1 TO nbr_obj_files
             opts = (IF m EQ 2 THEN ' /F' ELSE '')
             obj_dir = object_files<f>
             IF obj_dir[1,1] NE dir_delim THEN
                 obj_dir = '.':dir_delim:obj_dir
-            END 
-            makefile<-1> = tab:'-':remove_cmd:opts:' ':obj_dir:'*' 
-        NEXT f 
+            END
+            makewrapup<-1> = tab:'-':remove_cmd:opts:' ':obj_dir:'*'
+        NEXT f
         IF foundDollar THEN
             FOR c = 1 TO 2
                 cvar = '$(':clean<c>:')'
                 IF m = 1 THEN
                     cvar = '$(subst $$,\$$,':cvar:')'
                 END
-                makefile<-1> = tab:'-':remove_cmd:' ':cvar
+                makewrapup<-1> = tab:'-':remove_cmd:' ':cvar
             NEXT c
         END
-        INS '.PHONY : ':CHANGE(phony, @AM, ' '):@AM BEFORE makefile<1> 
+        INS '.PHONY : ':CHANGE(phony, @AM, ' '):@AM BEFORE makeinit<1>
+        makefile = makeinit:@AM:@AM:makelabels:@AM:@AM:makemakes:@AM:@AM:makewrapup
         WRITE makefile ON F.currdir,K.Makefile
 !
 ! Windows settings
@@ -497,5 +506,6 @@ processSource:
             END
         END
     END
-    
+
     RETURN
+

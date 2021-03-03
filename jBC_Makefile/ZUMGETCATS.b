@@ -46,6 +46,9 @@ $option jabba
             INS path BEFORE paths<pos>
         END
     NEXT path
+#if WIN32
+    paths = UPCASE(paths)
+#endif
     idx_offset = (IF sys->binpath[0]->index EQ 1 THEN 1 ELSE 0)
     FOR result IN sys->binaries
         IF result->$hasproperty('source') THEN
@@ -71,6 +74,9 @@ $option jabba
             INS path BEFORE paths<pos>
         END
     NEXT path
+#if WIN32
+    paths = UPCASE(paths)
+#endif
     FOR result in sys->routine
         IF result->$hasproperty('source') THEN
             prog = FIELD(result->version, ' ', 2)
@@ -98,7 +104,11 @@ $option jabba
     END
     STOP
 addcat:
-    LOCATE A.fpath IN paths BY 'AL' SETTING ok ELSE RETURN
+    apath = A.fpath
+#if WIN32
+    apath = UPCASE(apath)
+#endif
+    LOCATE apath IN paths BY 'AL' SETTING ok ELSE RETURN
 
     rc = IOCTL(F.catalog, JIOCTL_COMMAND_FINDRECORD, prog)
     IF rc THEN RETURN 
