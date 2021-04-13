@@ -4,7 +4,7 @@
 define catlib
 echo "" $(foreach fname,$(?),&& CATALOG -L./lib $(firstword $(subst /, ,$(fname))) $(word 2,$(subst /, ,$(fname))))
 endef
-libobj1=Functions]MOBJECT/fnCONVBP2DIR.o Functions]MOBJECT/fnDECODE.o Functions]MOBJECT/fnGETCATS.o Functions]MOBJECT/fnGETRELPATH.o Functions]MOBJECT/fnGETYN.o Functions]MOBJECT/fnLAST.o Functions]MOBJECT/fnMOVEOBJECT.o Functions]MOBJECT/fnOPEN.o Functions]MOBJECT/fnSPLITSENT.o Functions]MOBJECT/fnTRIMLAST.o jBC_Makefile]MOBJECT/fnPARSESOURCE.o
+libobj1=Functions]MOBJECT/fnCONVBP2DIR.o Functions]MOBJECT/fnDECODE.o Functions]MOBJECT/fnGETCATS.o Functions]MOBJECT/fnGETRELPATH.o Functions]MOBJECT/fnGETYN.o Functions]MOBJECT/fnLAST.o Functions]MOBJECT/fnMOVEOBJECT.o Functions]MOBJECT/fnOPEN.o Functions]MOBJECT/fnSPLITSENT.o Functions]MOBJECT/fnTIMESTAMP.o Functions]MOBJECT/fnTRIMLAST.o jBC_Makefile]MOBJECT/fnPARSESOURCE.o
 bin1=./bin/CONVBP2DIR ./bin/ZUMBASIC ./bin/ZUMBASICFAILS ./bin/ZUMCATALOG ./bin/ZUMCATEXEC ./bin/ZUMCHECKBAS ./bin/ZUMCREATEDIRS ./bin/ZUMBLDMAKE ./bin/ZUMGETCATS
 binobj1=Utilities]MOBJECT/CONVBP2DIR.o Utilities]MOBJECT/ZUMBASIC.o Utilities]MOBJECT/ZUMBASICFAILS.o Utilities]MOBJECT/ZUMCATALOG.o Utilities]MOBJECT/ZUMCATEXEC.o Utilities]MOBJECT/ZUMCHECKBAS.o Utilities]MOBJECT/ZUMCREATEDIRS.o jBC_Makefile]MOBJECT/ZUMBLDMAKE.o jBC_Makefile]MOBJECT/ZUMGETCATS.o
 binobjs=$(binobj1)
@@ -48,6 +48,9 @@ Functions]MOBJECT/fnOPEN.o: Functions/fnOPEN.b
 
 Functions]MOBJECT/fnSPLITSENT.o: Functions/fnSPLITSENT.b
 	BASIC Functions fnSPLITSENT.b
+
+Functions]MOBJECT/fnTIMESTAMP.o: Functions/fnTIMESTAMP.b
+	BASIC Functions 
 
 Functions]MOBJECT/fnTRIMLAST.o: Functions/fnTRIMLAST.b
 	BASIC Functions fnTRIMLAST.b

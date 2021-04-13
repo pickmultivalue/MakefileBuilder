@@ -1,6 +1,6 @@
 .PHONY : all targets
 
-libobj1=Functions]MOBJECT\fnCONVBP2DIR.obj Functions]MOBJECT\fnDECODE.obj Functions]MOBJECT\fnGETCATS.obj Functions]MOBJECT\fnGETRELPATH.obj Functions]MOBJECT\fnGETYN.obj Functions]MOBJECT\fnLAST.obj Functions]MOBJECT\fnMOVEOBJECT.obj Functions]MOBJECT\fnOPEN.obj Functions]MOBJECT\fnSPLITSENT.obj Functions]MOBJECT\fnTRIMLAST.obj jBC_Makefile]MOBJECT\fnPARSESOURCE.obj
+libobj1=Functions]MOBJECT\fnCONVBP2DIR.obj Functions]MOBJECT\fnDECODE.obj Functions]MOBJECT\fnGETCATS.obj Functions]MOBJECT\fnGETRELPATH.obj Functions]MOBJECT\fnGETYN.obj Functions]MOBJECT\fnLAST.obj Functions]MOBJECT\fnMOVEOBJECT.obj Functions]MOBJECT\fnOPEN.obj Functions]MOBJECT\fnSPLITSENT.obj Functions]MOBJECT\fnTIMESTAMP.obj Functions]MOBJECT\fnTRIMLAST.obj jBC_Makefile]MOBJECT\fnPARSESOURCE.obj
 bin1=.\bin\CONVBP2DIR.exe .\bin\ZUMBASIC.exe .\bin\ZUMBASICFAILS.exe .\bin\ZUMCATALOG.exe .\bin\ZUMCATEXEC.exe .\bin\ZUMCHECKBAS.exe .\bin\ZUMCREATEDIRS.exe .\bin\ZUMBLDMAKE.exe .\bin\ZUMGETCATS.exe
 binobj1=Utilities]MOBJECT\CONVBP2DIR.obj Utilities]MOBJECT\ZUMBASIC.obj Utilities]MOBJECT\ZUMBASICFAILS.obj Utilities]MOBJECT\ZUMCATALOG.obj Utilities]MOBJECT\ZUMCATEXEC.obj Utilities]MOBJECT\ZUMCHECKBAS.obj Utilities]MOBJECT\ZUMCREATEDIRS.obj jBC_Makefile]MOBJECT\ZUMBLDMAKE.obj jBC_Makefile]MOBJECT\ZUMGETCATS.obj
 binobjs=$(binobj1)
@@ -44,6 +44,9 @@ Functions]MOBJECT\fnOPEN.obj: Functions\fnOPEN.b
 
 Functions]MOBJECT\fnSPLITSENT.obj: Functions\fnSPLITSENT.b
 	BASIC Functions fnSPLITSENT.b
+
+Functions]MOBJECT\fnTIMESTAMP.obj: Functions\
+	BASIC Functions 
 
 Functions]MOBJECT\fnTRIMLAST.obj: Functions\fnTRIMLAST.b
 	BASIC Functions fnTRIMLAST.b
