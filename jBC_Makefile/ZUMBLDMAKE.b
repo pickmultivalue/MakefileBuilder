@@ -164,9 +164,9 @@
     includes = ''
     missing_mobject = ''
     F.temp = F.zumcats
-    GOSUB checkObject 
+    GOSUB checkObject
     F.temp = F.zumlibs
-    GOSUB checkObject 
+    GOSUB checkObject
     IF LEN(missing_mobject) THEN
         CRT 'The following files are not compatible.'
         CRT 'Please create a ,OBJECT data level for:'
@@ -188,6 +188,8 @@
     missing_code = ''
     binTargets = ''
     libTargets = ''
+    subroutines = ''
+    executes = ''
     FOR f = 1 TO fc
         fname = fnames<1, f>
         LOCATE fname IN relnames<1> SETTING rpos THEN
@@ -221,6 +223,16 @@
         CRT
         CRT CHANGE(CHANGE(missing_code, @AM, @CR:@LF), @VM, @CR:@LF)
         IF NOT(ignoreMissing) THEN STOP
+    END
+    IF LEN(subroutines) THEN
+        subroutines = CONVERT(subroutines, @VM, @AM)
+        WRITE subroutines ON F.currdir, 'subroutines_found'
+        CRT 'subroutines_found written to current directory'
+    END
+    IF LEN(executes) THEN
+        executes = CONVERT(executes, @VM, @AM)
+        WRITE executes ON F.currdir, 'executes_found'
+        CRT 'executes_found written to current directory'
     END
 !
 ! Initialise non-Windows strings
@@ -432,7 +444,13 @@ checkMissing:
 processSource:
 !
     missing_inc = ''
+    includes<3> = subroutines
+    includes<4> = executes
     rc = fnPARSESOURCE(convertFiles, fname, fvars(rpos), prog, includes, missing_inc)
+    subroutines = includes<3>
+    executes = includes<4>
+    DEL includes<3>
+    DEL includes<3>
     IF rc THEN
         IF LEN(missing_inc) THEN
             missing_code<-1> = 'Code ':fname:',':prog

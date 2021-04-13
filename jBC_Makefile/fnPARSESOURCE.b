@@ -7,6 +7,7 @@
 !
     COMMON /fnPARSESOURCE/ include_strings, jbase_includes
     comments = '!*'
+    CASING ON
 !
     IF UNASSIGNED(include_strings) OR LEN(include_strings) EQ 0 THEN
         include_strings = ''
@@ -64,7 +65,7 @@
                     IF convertFiles AND NOT(fnCONVBP2DIR(incl_file, f.var)) THEN
                         CRT incl_file:' is not a directory'
                         error<1, -1> = incl_file
-                    END 
+                    END
                 END
                 incl_key = incl_file:DIR_DELIM_CH:K.incl
                 LOCATE incl_key IN xref<1> BY 'AL' SETTING fpos ELSE
@@ -75,6 +76,34 @@
                 IF NOT(fnPARSESOURCE(convertFiles, incl_file, F.incl, K.incl, xref, error)) THEN
                     LOCATE K.file IN xref<2,fpos> BY 'AL' SETTING ipos ELSE
                         INS K.file BEFORE xref<2,fpos,ipos>
+                    END
+                END
+            END
+        END ELSE
+            line = CHANGE(TRIM(line), ' ', @AM)
+            IF NOT(LEN(line)) THEN CONTINUE
+            fword = UPCASE(line<1>)
+            IF fword EQ 'REM' THEN CONTINUE
+            LOCATE 'DEFFUN' IN line SETTING cpos ELSE
+                LOCATE 'CALL' IN line SETTING cpos ELSE
+                    LOCATE 'call' IN line SETTING cpos ELSE cpos = @FALSE
+                END
+            END
+            IF cpos THEN
+                subr = FIELD(line<cpos+1>, '(', 1)
+                LOCATE subr IN xref<3> BY 'AL' SETTING cpos ELSE
+                    INS subr BEFORE xref<3,cpos>
+                END
+                CONTINUE
+            END
+            LOCATE 'EXECUTE' IN line SETTING cpos THEN
+                exec = line<cpos+1>
+                IF INDEX(\"'\, exec[1,1], 1) THEN
+                    q = exec[1,1]
+                    exec = FIELD(exec, q, 2)
+                    IF exec[1,1] EQ '!' THEN CONTINUE
+                    LOCATE exec IN xref<4> BY 'AL' SETTING cpos ELSE
+                        INS exec BEFORE xref<4,cpos>
                     END
                 END
             END

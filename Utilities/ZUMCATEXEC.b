@@ -8,6 +8,9 @@
     arg1 = FIELD(args, ' ', 1)
     fnames = fnGETCATS(arg1)
     fc = DCOUNT(fnames<1>, @VM)
+    rc = GETENV('JBCDEV_LIB',dev_lib)
+    dev_lib := DIR_DELIM_CH:'obj'
+    OPEN dev_lib TO F.devobj ELSE STOP 201,dev_lib
     OPEN 'BASICFAILS' TO F.fails ELSE STOP 201,'BASICFAILS'
     CRT 'Processing ':DQUOTE(cmd):' on the following files: ':
     CRT CHANGE(fnames<1>, @VM, ', ')
@@ -17,22 +20,28 @@
     CASING ON
     BEGIN CASE
         CASE cmd EQ 'BASIC'
-            foldCount = 1 
+            foldCount = 1
         CASE cmd EQ 'CATALOG'
-            options = ' (O'
+            options = ' (OW'
     END CASE
     result = ''
     objinfo = ''
-    srcinfo = '' 
+    srcinfo = ''
     errors = @FALSE
     FOR f = 1 TO fc
         fname = fnames<1, f>
         obj = fname:',OBJECT'
-        OPEN obj TO F.object ELSE STOP 201,obj
+        OPEN obj TO F.object ELSE
+            CRT obj:' is not a file'
+            CRT CHANGE(fnames<2,f>, @SVM,',')
+            errors = @TRUE
+            CONTINUE
+        END
         rc = IOCTL(F.object, JIOCTL_COMMAND_FILESTATUS, result)
         IF result<1> NE 'UD' THEN
             CRT obj:' is not a directory'
             errors = @TRUE
+            CONTINUE
         END
         OPEN fname TO F.source THEN
             rc = IOCTL(F.source, JIOCTL_COMMAND_FILESTATUS, result)
@@ -42,6 +51,7 @@
             END
         END ELSE
             CRT 'Unable to open ':SQUOTE(fname)
+            CRT CHANGE(fnames<2,f>, @SVM,',')
             errors = @TRUE
         END
     NEXT f
@@ -52,7 +62,7 @@
         OPEN obj TO F.object ELSE STOP 201,obj
         rc = IOCTL(F.object, JBC_COMMAND_GETFILENAME, objinfo)
         OPEN fname TO F.source THEN
-            IF cmd EQ 'BASIC' THEN CLEARFILE F.object
+            !IF cmd EQ 'BASIC' THEN CLEARFILE F.object
             rc = IOCTL(F.source, JBC_COMMAND_GETFILENAME, srcinfo)
             progs = fnSPLITSENT(fnames<2, f>, foldCount)
             pc = DCOUNT(progs, @AM)
@@ -68,15 +78,22 @@
 
                     BEGIN CASE
                         CASE cmd EQ 'CHECKBAS'
+                            fullpath = srcinfo:DIR_DELIM_CH:prog
+                            srcstamp = fnTIMESTAMP(fullpath)
+                            fullpath = dev_lib:DIR_DELIM_CH:prog:'.o'
+                            objstamp = fnTIMESTAMP(fullpath)
+                            IF LEN(objstamp) THEN
+                                IF objstamp<1> GE srcstamp<1> AND objstamp<2> GE srcstamp<2> ELSE
+                                    CRT fpath:' source is newer than cataloged object'
+                                END
+                            END
                             IF NOT(IOCTL(F.source, JIOCTL_COMMAND_FINDRECORD, prog)) THEN
                                 CRT fpath:' missing'
                                 CONTINUE
                             END
                             fullpath = objinfo:DIR_DELIM_CH:k.obj
-                            objstamp = fnTIMESTAMP(fullpath) 
+                            objstamp = fnTIMESTAMP(fullpath)
                             IF LEN(objstamp) THEN
-                                fullpath = srcinfo:DIR_DELIM_CH:prog
-                                srcstamp = fnTIMESTAMP(fullpath)
                                 IF objstamp<1> GE srcstamp<1> AND objstamp<2> GE srcstamp<2> ELSE
                                     CRT fpath:' source is newer than object'
                                 END
@@ -101,7 +118,7 @@
                         CRT 'Processing ':fname:' ':this_progs
                         EXECUTE cmd:' ':fname:' ':this_progs:options RETURNING errs
                         IF cmd EQ 'CATALOG' THEN
-                            IF errs NE 241 THEN DEBUG
+                            !IF errs NE 241 THEN DEBUG
                         END ELSE
                             IF errs<1,3> NE 'BASIC_OK' THEN
                                 WRITE errs ON F.fails, CHANGE(fname:'/':this_progs, '/', @TAB)
