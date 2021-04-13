@@ -111,6 +111,7 @@
     rc = GETENV('PWD',pwd)
     missing_files = ''
     ZUMCATS = '.':DIR_DELIM_CH:'ZUMCATS'
+    ZUMLIBS = '.':DIR_DELIM_CH:'ZUMLIBS'
     BADCATS = '.':DIR_DELIM_CH:'BADCATS'
     IF NOT(fnOPEN('.', F.currdir, error)) THEN missing_files<-1> = error
     IF NOT(fnOPEN(ZUMCATS, F.zumcats, error)) THEN
@@ -122,11 +123,13 @@
         IF fnGETYN(question, 'Y':@VM:'N') EQ 'Y' THEN
             error = ''
             EXECUTE 'CREATE-FILE DATA ':ZUMCATS:' 47'
+            EXECUTE 'CREATE-FILE DATA ':ZUMLIBS:' 47'
             EXECUTE 'CREATE-FILE DATA ':BADCATS:' 47'
             rc = fnOPEN(ZUMCATS, F.zumcats, error)
         END
         missing_files<-1> = error
     END
+    rc = fnOPEN(ZUMLIBS, F.zumlibs, error)
     GOSUB checkMissing
 !
     READ makefile FROM F.currdir, k.make THEN
@@ -159,76 +162,11 @@
     binvars = ''
     libvars = ''
     includes = ''
-    SELECT F.zumcats
     missing_mobject = ''
-    LOOP WHILE READNEXT prog DO
-        MATREAD A.cat FROM F.zumcats, prog ELSE STOP 202, prog
-        LOCATE A.fname IN missing_files SETTING mpos THEN CONTINUE
-        LOCATE A.fname IN missing_mobject SETTING mpos THEN CONTINUE
-        error = @FALSE
-        LOCATE A.fname IN fnames<1> BY 'AL' SETTING fpos ELSE
-            INS A.fname BEFORE fnames<1, fpos>
-            INS '' BEFORE fnames<2, fpos>
-            LOCATE A.fname IN relnames<1> SETTING rpos ELSE
-                INS A.fname BEFORE relnames<1,rpos>
-                INS '' BEFORE relnames<2,rpos>
-            END
-            IF NOT(fnOPEN(A.fname, f.var, '':@AM:@TRUE)) THEN
-                missing_files<-1> = A.fname
-                error = @TRUE
-            END ELSE
-                objFile = A.fname:']MOBJECT'
-                IF NOT(fnOPEN(objFile, f.object, '')) THEN
-                    IF convertFiles THEN
-                        EXECUTE 'CREATE-FILE DATA ':objFile:' TYPE=UD'
-                        error = NOT(fnOPEN(objFile, f.object, ''))
-                        IF NOT(error) THEN
-                            IF NOT(fnMOVEOBJECT(f.var, f.object)) THEN
-                                CRT 'Error moving object code for ':A.fname
-                                CRT 'Aborting.'
-                                STOP
-                            END
-                        END
-                    END ELSE error = @TRUE
-                END
-                IF error THEN
-                    missing_mobject<-1> = A.fname
-                END ELSE
-                    fstatus = ''
-                    rc = IOCTL(f.var, JIOCTL_COMMAND_FILESTATUS, fstatus)
-                    IF fstatus<1> NE 'UD' THEN
-                        IF convertFiles THEN
-                            CLOSE f.var
-                            IF NOT(fnCONVBP2DIR(A.fname, f.var)) THEN
-                                CRT 'Fatal error opening/converting ':A.fname
-                                STOP
-                            END
-                        END ELSE error = @TRUE
-                    END
-                    IF error THEN
-                        CRT A.fname:' is not a directory'
-                        missing_files<-1> = A.fname
-                    END ELSE
-                        fvars(rpos) = f.var
-                        relnames<2,rpos> = A.fname
-                    END
-                END
-            END
-        END
-        IF error THEN CONTINUE
-        LOCATE prog IN fnames<2, fpos> BY 'AL' SETTING ppos ELSE
-            INS prog BEFORE fnames<2, fpos, ppos>
-        END
-        IF fnLAST(A.fpath, DIR_DELIM_CH) EQ 'bin' THEN
-            LOCATE A.fpath IN binvars BY 'AL' SETTING pos ELSE
-                INS A.fpath BEFORE binvars<pos>
-            END
-        END ELSE
-            LOCATE prog IN libvars BY 'AL' SETTING pos ELSE
-                INS prog BEFORE libvars<pos>
-            END
-        END
-    REPEAT
+    F.temp = F.zumcats
+    GOSUB checkObject 
+    F.temp = F.zumlibs
+    GOSUB checkObject 
     IF LEN(missing_mobject) THEN
         CRT 'The following files are not compatible.'
         CRT 'Please create a ,OBJECT data level for:'
@@ -509,3 +447,74 @@ processSource:
 
     RETURN
 
+checkObject: !
+    SELECT F.temp
+    LOOP WHILE READNEXT prog DO
+        MATREAD A.cat FROM F.temp, prog ELSE STOP 202, prog
+        LOCATE A.fname IN missing_files SETTING mpos THEN CONTINUE
+        LOCATE A.fname IN missing_mobject SETTING mpos THEN CONTINUE
+        error = @FALSE
+        LOCATE A.fname IN fnames<1> BY 'AL' SETTING fpos ELSE
+            INS A.fname BEFORE fnames<1, fpos>
+            INS '' BEFORE fnames<2, fpos>
+            LOCATE A.fname IN relnames<1> SETTING rpos ELSE
+                INS A.fname BEFORE relnames<1,rpos>
+                INS '' BEFORE relnames<2,rpos>
+            END
+            IF NOT(fnOPEN(A.fname, f.var, '':@AM:@TRUE)) THEN
+                missing_files<-1> = A.fname
+                error = @TRUE
+            END ELSE
+                objFile = A.fname:']MOBJECT'
+                IF NOT(fnOPEN(objFile, f.object, '')) THEN
+                    IF convertFiles THEN
+                        EXECUTE 'CREATE-FILE DATA ':objFile:' TYPE=UD'
+                        error = NOT(fnOPEN(objFile, f.object, ''))
+                        IF NOT(error) THEN
+                            IF NOT(fnMOVEOBJECT(f.var, f.object)) THEN
+                                CRT 'Error moving object code for ':A.fname
+                                CRT 'Aborting.'
+                                STOP
+                            END
+                        END
+                    END ELSE error = @TRUE
+                END
+                IF error THEN
+                    missing_mobject<-1> = A.fname
+                END ELSE
+                    fstatus = ''
+                    rc = IOCTL(f.var, JIOCTL_COMMAND_FILESTATUS, fstatus)
+                    IF fstatus<1> NE 'UD' THEN
+                        IF convertFiles THEN
+                            CLOSE f.var
+                            IF NOT(fnCONVBP2DIR(A.fname, f.var)) THEN
+                                CRT 'Fatal error opening/converting ':A.fname
+                                STOP
+                            END
+                        END ELSE error = @TRUE
+                    END
+                    IF error THEN
+                        CRT A.fname:' is not a directory'
+                        missing_files<-1> = A.fname
+                    END ELSE
+                        fvars(rpos) = f.var
+                        relnames<2,rpos> = A.fname
+                    END
+                END
+            END
+        END
+        IF error THEN CONTINUE
+        LOCATE prog IN fnames<2, fpos> BY 'AL' SETTING ppos ELSE
+            INS prog BEFORE fnames<2, fpos, ppos>
+        END
+        IF fnLAST(A.fpath, DIR_DELIM_CH) EQ 'bin' THEN
+            LOCATE A.fpath IN binvars BY 'AL' SETTING pos ELSE
+                INS A.fpath BEFORE binvars<pos>
+            END
+        END ELSE
+            LOCATE prog IN libvars BY 'AL' SETTING pos ELSE
+                INS prog BEFORE libvars<pos>
+            END
+        END
+    REPEAT
+    RETURN

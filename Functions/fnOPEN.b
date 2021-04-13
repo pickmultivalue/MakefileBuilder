@@ -17,9 +17,9 @@
 !
         BEGIN CASE
             CASE failopt EQ 1
-                STOP rc
+                STOP rc, filename
             CASE failopt EQ 2
-                ABORT rc
+                ABORT rc, filename 
             CASE 1
                 failopt = 'Cannot open ':filename
                 rc = 0
