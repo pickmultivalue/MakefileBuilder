@@ -1,5 +1,6 @@
 .PHONY : all targets
 
+all: targets
 libobj1=Functions]MOBJECT\fnCONVBP2DIR.obj Functions]MOBJECT\fnDECODE.obj Functions]MOBJECT\fnGETCATS.obj Functions]MOBJECT\fnGETRELPATH.obj Functions]MOBJECT\fnGETYN.obj Functions]MOBJECT\fnLAST.obj Functions]MOBJECT\fnMOVEOBJECT.obj Functions]MOBJECT\fnOPEN.obj Functions]MOBJECT\fnSPLITSENT.obj Functions]MOBJECT\fnTIMESTAMP.obj Functions]MOBJECT\fnTRIMLAST.obj jBC_Makefile]MOBJECT\fnPARSESOURCE.obj
 bin1=.\bin\CONVBP2DIR.exe .\bin\ZUMBASIC.exe .\bin\ZUMBASICFAILS.exe .\bin\ZUMCATALOG.exe .\bin\ZUMCATEXEC.exe .\bin\ZUMCHECKBAS.exe .\bin\ZUMCREATEDIRS.exe .\bin\ZUMBLDMAKE.exe .\bin\ZUMGETCATS.exe
 binobj1=Utilities]MOBJECT\CONVBP2DIR.obj Utilities]MOBJECT\ZUMBASIC.obj Utilities]MOBJECT\ZUMBASICFAILS.obj Utilities]MOBJECT\ZUMCATALOG.obj Utilities]MOBJECT\ZUMCATEXEC.obj Utilities]MOBJECT\ZUMCHECKBAS.obj Utilities]MOBJECT\ZUMCREATEDIRS.obj jBC_Makefile]MOBJECT\ZUMBLDMAKE.obj jBC_Makefile]MOBJECT\ZUMGETCATS.obj
@@ -8,9 +9,6 @@ libobjs=$(libobj1)
 
 alllibs: $(libobjs)
 	make lib\libdef.def
-
-
-all: targets
 
 targets: allbins alllibs
 
@@ -45,8 +43,8 @@ Functions]MOBJECT\fnOPEN.obj: Functions\fnOPEN.b
 Functions]MOBJECT\fnSPLITSENT.obj: Functions\fnSPLITSENT.b
 	BASIC Functions fnSPLITSENT.b
 
-Functions]MOBJECT\fnTIMESTAMP.obj: Functions\
-	BASIC Functions 
+Functions]MOBJECT\fnTIMESTAMP.obj: Functions\fnTIMESTAMP.b
+	BASIC Functions fnTIMESTAMP.b
 
 Functions]MOBJECT\fnTRIMLAST.obj: Functions\fnTRIMLAST.b
 	BASIC Functions fnTRIMLAST.b
@@ -109,7 +107,7 @@ jBC_Makefile]MOBJECT\fnPARSESOURCE.obj: jBC_Makefile\fnPARSESOURCE.b
 	BASIC jBC_Makefile fnPARSESOURCE.b
 
 libs1: $(libobj1)
-	CATALOG -L.\lib Functions fnCONVBP2DIR.b fnDECODE.b fnGETCATS.b fnGETRELPATH.b fnGETYN.b fnLAST.b fnMOVEOBJECT.b fnOPEN.b fnSPLITSENT.b fnTRIMLAST.b
+	CATALOG -L.\lib Functions fnCONVBP2DIR.b fnDECODE.b fnGETCATS.b fnGETRELPATH.b fnGETYN.b fnLAST.b fnMOVEOBJECT.b fnOPEN.b fnSPLITSENT.b fnTIMESTAMP.b fnTRIMLAST.b
 	CATALOG -L.\lib jBC_Makefile fnPARSESOURCE.b
 
 lib\libdef.def: $(libobj1)
@@ -117,7 +115,7 @@ lib\libdef.def: $(libobj1)
 
 
 rebuild: $(libobjs) $(binobjs)
-	CATALOG -L.\lib Functions fnCONVBP2DIR.b fnDECODE.b fnGETCATS.b fnGETRELPATH.b fnGETYN.b fnLAST.b fnMOVEOBJECT.b fnOPEN.b fnSPLITSENT.b fnTRIMLAST.b
+	CATALOG -L.\lib Functions fnCONVBP2DIR.b fnDECODE.b fnGETCATS.b fnGETRELPATH.b fnGETYN.b fnLAST.b fnMOVEOBJECT.b fnOPEN.b fnSPLITSENT.b fnTIMESTAMP.b fnTRIMLAST.b
 	CATALOG -o.\bin Utilities CONVBP2DIR.b ZUMBASIC.b ZUMBASICFAILS.b ZUMCATALOG.b ZUMCATEXEC.b ZUMCHECKBAS.b ZUMCREATEDIRS.b
 	CATALOG -L.\lib jBC_Makefile fnPARSESOURCE.b
 	CATALOG -o.\bin jBC_Makefile ZUMBLDMAKE.b ZUMGETCATS.b

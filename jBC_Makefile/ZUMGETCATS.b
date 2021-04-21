@@ -69,7 +69,7 @@
     found = 0
     errors = ''
     paths = ''
-    F.catalog = F.library ;! lazy F.target switch 
+    F.catalog = F.library ;! lazy F.target switch
     FOR path IN libpaths
         LOCATE path IN paths BY 'AL' SETTING pos ELSE
             INS path BEFORE paths<pos>
@@ -145,6 +145,6 @@ addcat:
     A.timestamp = FIELD(result->version, ' ', 6, 99)
     MATWRITE A.cat ON F.target, prog ON ERROR
         CRT 'Error writing ':prog
-        STOP 
+        STOP
     END
     RETURN

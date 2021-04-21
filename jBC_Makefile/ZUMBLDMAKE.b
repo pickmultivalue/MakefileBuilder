@@ -64,7 +64,7 @@
         CRT '-m Ignore missing errors'
         CRT '-s Scan for catalog discovery'
         CRT '-C Convert BP files (convert to dir, create OBJECT directory if missing)'
-        CRT '-D Generate Doxygen Help'
+!        CRT '-D Generate Doxygen Help'
         STOP
     END
 !
@@ -113,6 +113,7 @@
     ZUMCATS = '.':DIR_DELIM_CH:'ZUMCATS'
     ZUMLIBS = '.':DIR_DELIM_CH:'ZUMLIBS'
     BADCATS = '.':DIR_DELIM_CH:'BADCATS'
+    BASICFAILS = '.':DIR_DELIM_CH:'BASICFAILS'
     IF NOT(fnOPEN('.', F.currdir, error)) THEN missing_files<-1> = error
     IF NOT(fnOPEN(ZUMCATS, F.zumcats, error)) THEN
         IF NOT(scanForCatalogs) THEN
@@ -125,6 +126,7 @@
             EXECUTE 'CREATE-FILE DATA ':ZUMCATS:' 47'
             EXECUTE 'CREATE-FILE DATA ':ZUMLIBS:' 47'
             EXECUTE 'CREATE-FILE DATA ':BADCATS:' 47'
+            EXECUTE 'CREATE-FILE DATA ':BASICFAILS:' 47'
             rc = fnOPEN(ZUMCATS, F.zumcats, error)
         END
         missing_files<-1> = error
@@ -265,7 +267,6 @@
             makeinit<-1> = 'echo "" $(foreach fname,$(?),&& CATALOG -L./lib $(firstword $(subst /, ,$(fname))) $(word 2,$(subst /, ,$(fname))))'
             makeinit<-1> = 'endef'
         END
-        makelabels<-1> = @AM:'all: targets'
         phony<-1> = 'all'
         FOR f = 1 TO fc
             fname = fnames<1, f>
@@ -414,8 +415,9 @@
                 makewrapup<-1> = tab:'-':remove_cmd:' ':cvar
             NEXT c
         END
+        INS 'all: targets' BEFORE makeinit<1>
         INS '.PHONY : ':CHANGE(phony, @AM, ' '):@AM BEFORE makeinit<1>
-        makefile = makeinit:@AM:@AM:makelabels:@AM:@AM:makemakes:@AM:@AM:makewrapup
+        makefile = makeinit:@AM:makelabels:@AM:@AM:makemakes:@AM:@AM:makewrapup
         WRITE makefile ON F.currdir,K.Makefile
 !
 ! Windows settings

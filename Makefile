@@ -1,5 +1,6 @@
 .PHONY : all targets
 
+all: targets
 
 define catlib
 echo "" $(foreach fname,$(?),&& CATALOG -L./lib $(firstword $(subst /, ,$(fname))) $(word 2,$(subst /, ,$(fname))))
@@ -12,9 +13,6 @@ libobjs=$(libobj1)
 
 alllibs: $(libobjs)
 	make lib/lib.el
-
-
-all: targets
 
 targets: allbins alllibs
 
@@ -50,7 +48,7 @@ Functions]MOBJECT/fnSPLITSENT.o: Functions/fnSPLITSENT.b
 	BASIC Functions fnSPLITSENT.b
 
 Functions]MOBJECT/fnTIMESTAMP.o: Functions/fnTIMESTAMP.b
-	BASIC Functions 
+	BASIC Functions fnTIMESTAMP.b
 
 Functions]MOBJECT/fnTRIMLAST.o: Functions/fnTRIMLAST.b
 	BASIC Functions fnTRIMLAST.b
