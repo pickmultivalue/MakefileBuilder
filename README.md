@@ -68,5 +68,13 @@ Where options:
 | ZUMCHECKBAS | Checks if the code is compiled (including checking if the object is newer than the source) |
 | CONVBP2DIR | Converts a BP hashed file to a DIR type and creates a BP,OBJECT director if applicable |
 
+### ZUMGETCATS
+This utility generates **ZUMCATS** and **ZUMLIBS** and additionally writes out two files to the current directory:
 
-|
+1. executes_found
+2. subroutines_found
+
+These two files are not meant to be definitive discoveries of programs and subroutines EXECUTEd or CALLed but can be useful for getting an overview of what is *in use*. The only entries written out are those that are quoted (for EXECUTE) or not @subname (in the case of CALL).
+
+### ZUMBASIC
+As well as compiling the source it populates a BASICFAILS file/directory with any failures.
