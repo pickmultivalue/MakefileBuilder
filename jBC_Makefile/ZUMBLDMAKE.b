@@ -170,9 +170,13 @@
     F.temp = F.zumlibs
     GOSUB checkObject
     IF LEN(missing_mobject) THEN
-        CRT 'The following files are not compatible.'
-        CRT 'Please create a ,OBJECT data level for:'
-        CRT CHANGE(missing_mobject, @AM, @CR:@LF)
+        CRT 'The following files/programs need to be addressed:'
+        CRT
+        fc = DCOUNT(missing_mobject<1>, @VM)
+        FOR f = 1 TO fc
+            CRT 'File: ':missing_mobject<1,f>
+            CRT CHANGE(missing_mobject<2,f>, @SVM,' ')
+        NEXT f
         STOP
     END
 !
@@ -471,8 +475,8 @@ checkObject: !
     SELECT F.temp
     LOOP WHILE READNEXT prog DO
         MATREAD A.cat FROM F.temp, prog ELSE STOP 202, prog
-        LOCATE A.fname IN missing_files SETTING mpos THEN CONTINUE
-        LOCATE A.fname IN missing_mobject SETTING mpos THEN CONTINUE
+!        LOCATE A.fname IN missing_files SETTING mpos THEN CONTINUE
+!        LOCATE A.fname IN missing_mobject SETTING mpos THEN CONTINUE
         error = @FALSE
         LOCATE A.fname IN fnames<1> BY 'AL' SETTING fpos ELSE
             INS A.fname BEFORE fnames<1, fpos>
@@ -482,7 +486,9 @@ checkObject: !
                 INS '' BEFORE relnames<2,rpos>
             END
             IF NOT(fnOPEN(A.fname, f.var, '':@AM:@TRUE)) THEN
-                missing_files<-1> = A.fname
+                LOCATE A.fname IN missing_files BY 'AL' SETTING mpos ELSE
+                    INS A.fname BEFORE missing_files<mpos>
+                END
                 error = @TRUE
             END ELSE
                 objFile = A.fname:']MOBJECT'
@@ -500,7 +506,10 @@ checkObject: !
                     END ELSE error = @TRUE
                 END
                 IF error THEN
-                    missing_mobject<-1> = A.fname
+                    LOCATE A.fname IN missing_mobject<1> BY 'AL' SETTING mpos ELSE
+                        INS A.fname BEFORE missing_mobject<1,mpos>
+                        INS '' BEFORE missing_mobject<2,mpos>
+                    END
                 END ELSE
                     fstatus = ''
                     rc = IOCTL(f.var, JIOCTL_COMMAND_FILESTATUS, fstatus)
@@ -522,6 +531,9 @@ checkObject: !
                     END
                 END
             END
+        END
+        LOCATE A.fname IN missing_mobject<1> BY 'AL' SETTING mpos THEN 
+            missing_mobject<2,mpos,-1> = prog
         END
         IF error THEN CONTINUE
         LOCATE prog IN fnames<2, fpos> BY 'AL' SETTING ppos ELSE
