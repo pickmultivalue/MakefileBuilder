@@ -83,7 +83,7 @@
                             fullpath = dev_lib:DIR_DELIM_CH:prog:'.o'
                             objstamp = fnTIMESTAMP(fullpath)
                             IF LEN(objstamp) THEN
-                                IF objstamp<1> GE srcstamp<1> AND objstamp<2> GE srcstamp<2> ELSE
+                                IF objstamp<1> GE srcstamp<1> OR (objstamp<1> EQ srcstamp<1> AND objstamp<2> GE srcstamp<2>) ELSE
                                     CRT fpath:' source is newer than cataloged object'
                                 END
                             END
@@ -94,7 +94,7 @@
                             fullpath = objinfo:DIR_DELIM_CH:k.obj
                             objstamp = fnTIMESTAMP(fullpath)
                             IF LEN(objstamp) THEN
-                                IF objstamp<1> GE srcstamp<1> AND objstamp<2> GE srcstamp<2> ELSE
+                                IF objstamp<1> GE srcstamp<1> OR (objstamp<1> EQ srcstamp<1> AND objstamp<2> GE srcstamp<2>) ELSE
                                     CRT fpath:' source is newer than object'
                                 END
                             END ELSE

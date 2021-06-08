@@ -175,7 +175,7 @@
         fc = DCOUNT(missing_mobject<1>, @VM)
         FOR f = 1 TO fc
             CRT 'File: ':missing_mobject<1,f>
-            CRT CHANGE(missing_mobject<2,f>, @SVM,' ')
+            CRT CHANGE(fnSPLITSENT(CHANGE(missing_mobject<2,f>, @SVM,' '), 5), @AM, @CR:@LF)
         NEXT f
         STOP
     END
