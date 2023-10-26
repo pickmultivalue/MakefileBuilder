@@ -115,6 +115,7 @@
     END
 !
     rc = GETENV('PWD',pwd)
+    jelf = 0
     rc = GETENV('JELF',jelf)
     usingJELF = FIELD(jelf, ',', 1)
     missing_files = ''
@@ -314,6 +315,7 @@
                 flag = flags<1, 1, p>
                 source = names<1, 1, p>
                 IF LEN(source) EQ 0 THEN
+                    DEBUG
                     CRT target:' catalog mismatch with code'
                     CONTINUE
                 END

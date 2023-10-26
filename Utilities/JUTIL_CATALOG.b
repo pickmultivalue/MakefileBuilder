@@ -11,9 +11,9 @@
         CRT '==============='
         DATA 'JUTIL_CATEXEC CATALOG BINS'
         IF LEN(proglist) THEN
-            EXECUTE 'SELECT JUTLMKCATS' PASSLIST proglist
+            EXECUTE 'SELECT JUTLCATS' PASSLIST proglist
         END ELSE
-            EXECUTE 'SELECT JUTLMKCATS'
+            EXECUTE 'SELECT JUTLCATS'
         END
     END
     IF progs NE 'BINS' THEN
@@ -21,8 +21,8 @@
         CRT '==============='
         DATA 'JUTIL_CATEXEC CATALOG LIBS'
         IF LEN(proglist) THEN
-            EXECUTE 'SELECT JUTLMKLIBS' PASSLIST proglist
+            EXECUTE 'SELECT JUTLLIBS' PASSLIST proglist
         END ELSE
-            EXECUTE 'SELECT JUTLMKLIBS'
+            EXECUTE 'SELECT JUTLLIBS'
         END
     END

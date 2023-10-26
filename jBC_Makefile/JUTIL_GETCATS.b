@@ -8,6 +8,18 @@
     CALL JBASEParseCommandLine1(args, opts, sent)
 !
     LOCATE '-l' IN args SETTING local ELSE local = @FALSE
+    LOCATE '-v' IN args SETTING verbose ELSE verbose = @FALSE
+    LOCATE '-j' IN args SETTING usejelf ELSE usejelf = @FALSE
+    LOCATE '-L' IN args SETTING Lopt THEN
+        processbins = @FALSE
+    END ELSE
+        processbins = @TRUE
+    END
+    LOCATE '-B' IN args SETTING Lopt THEN
+        processlibs = @FALSE
+    END ELSE
+        processlibs = @TRUE
+    END
 !
     DEFFUN fnOPEN()
     DEFFUN fnLAST()
@@ -26,107 +38,122 @@
         CRT 'Please set JUTLMAKEBINS and JUTLMAKELIBS to the target bins/libs'
         STOP
     END
-    rc = DCOUNT(devbins, DIR_SEP_CH)
+    debug_prog = ''
+    rc = GETENV('JUTILDEBUGPROG',debug_prog)
+    tmpfix = ''
+    rc = GETENV('JUTILTMPFIX',tmpfix)
+    dc = DCOUNT(devbins, DIR_SEP_CH)
     fdevbins = ''
-    FOR f = 1 TO rc
+    FOR f = 1 TO dc
         devbin = FIELD(devbins, DIR_SEP_CH, f)
-        rc = fnOPEN(devbin, f.devbin, 1)
-        rc = IOCTL(f.devbin, JBC_COMMAND_GETFILENAME, devbin)
+        rc = fnOPEN(devbin, f.devbin, 1:@AM:@TRUE)
         LOCATE devbin IN fdevbins SETTING pos ELSE fdevbins<-1> = devbin
     NEXT f
-    rc = DCOUNT(devlibs, DIR_SEP_CH)
+    dc = DCOUNT(devlibs, DIR_SEP_CH)
     fdevlibs = ''
-    FOR f = 1 TO rc
+    FOR f = 1 TO dc
         devlib = FIELD(devlibs, DIR_SEP_CH, f)
-        rc = fnOPEN(devlib, f.devlib, 1)
-        rc = IOCTL(f.devlib, JBC_COMMAND_GETFILENAME, devlib)
+        rc = fnOPEN(devlib, f.devlib, 1:@AM:@TRUE)
         LOCATE devlib IN fdevlibs SETTING pos ELSE fdevlibs<-1> = devlib
     NEXT f
     rc = fnOPEN('.', F.currdir, 1)
     READ binpaths FROM F.currdir, 'JUTLBINPATHS' ELSE
-        binpaths = pwd:DIR_DELIM_CH:'bin'
+        binpaths = CHANGE(devbins, DIR_SEP_CH, @AM);!pwd:DIR_DELIM_CH:'bin'
     END
     READ libpaths FROM F.currdir, 'JUTLOBJPATHS' ELSE
-        libpaths = pwd:DIR_DELIM_CH:'lib'
+        libpaths = CHANGE(devlibs, DIR_SEP_CH, @AM);!pwd:DIR_DELIM_CH:'lib'
     END
     rc = fnOPEN('.':DIR_DELIM_CH:'JUTLCATS', F.catalog, 1)
     rc = fnOPEN('.':DIR_DELIM_CH:'JUTLLIBS', F.library, 1)
     rc = fnOPEN('.':DIR_DELIM_CH:'BADCATS', F.badcatalog, 1)
-    CLEARFILE F.catalog
-    CLEARFILE F.library
     CLEARFILE F.badcatalog
     badcount = 0
     openedFiles = ''
     fullpaths = ''
 !
-    CRT 'Building binary list (filtering using ':devbins:')...':CHAR(0):
-    sys = new object("$system")
-    bc = sys->getbinaries('', 23)
-    CRT sys->binaries->$size():' discovered'
-    found = 0
-    errors = ''
-    paths = ''
-    FOR path IN binpaths
-        opt = 1:@AM:@true
-        IF fnOPEN(path, f.path, opt) THEN
+    IF processbins THEN
+        CLEARFILE F.badcatalog
+        CRT 'Building binary list (filtering using ':devbins:')...':CHAR(0):
+        sys = new object("$system")
+        rc = PUTENV('PATH=':devbins)
+        bc = sys->getbinaries('', 23)
+        CRT sys->binaries->$size():' discovered'
+        found = 0
+        errors = ''
+        paths = ''
+        FOR path IN binpaths
+            opt = 1:@AM:@true
+            IF fnOPEN(path, f.path, opt) THEN
+                LOCATE path IN paths BY 'AL' SETTING pos ELSE
+                    INS path BEFORE paths<pos>
+                END
+            END
+        NEXT path
+        IF INDEX(SYSTEM(1017), 'WIN', 1) THEN paths = UPCASE(paths)
+        idx_offset = (IF sys->binpath[0]->index EQ 1 THEN 1 ELSE 0)
+        fdevs = fdevbins
+        FOR result IN sys->binaries
+            IF result->$hasproperty('source') THEN
+                IF NOT(INDEX(result->source, "source file unknown",1)) THEN
+                    prog = result->name
+                    IF prog EQ debug_prog THEN DEBUG
+                    A.fpath = sys->binpath[result->index-idx_offset]->directory
+                    IF verbose THEN CRT prog:
+                    GOSUB addprog
+                    IF verbose THEN CRT
+                END
+            END
+        NEXT result
+        CRT
+        CRT 'Found ':found:' programs'
+        CRT
+    END
+    IF processlibs THEN
+        CRT 'Building library list (filtering using ':devlibs:')...':CHAR(0):
+        sys = new object("$system")
+        rc = PUTENV('JBCOBJECTLIST=':devlibs)
+        sysm = sys->getroutines('',23)
+        CRT sys->routine->$size():' discovered'
+        found = 0
+        errors = ''
+        paths = ''
+        F.catalog = F.library ;! lazy F.target switch
+        FOR path IN libpaths
             LOCATE path IN paths BY 'AL' SETTING pos ELSE
                 INS path BEFORE paths<pos>
             END
-        END
-    NEXT path
-    IF INDEX(SYSTEM(1017), 'WIN', 1) THEN paths = UPCASE(paths)
-    idx_offset = (IF sys->binpath[0]->index EQ 1 THEN 1 ELSE 0)
-    fdevs = fdevbins
-    FOR result IN sys->binaries
-        IF result->$hasproperty('source') THEN
-            IF NOT(INDEX(result->source, "source file unknown",1)) THEN
-                prog = result->name
-                A.fpath = sys->binpath[result->index-idx_offset]->directory
-                GOSUB addprog
-            END
-        END
-    NEXT result
-    CRT
-    CRT 'Found ':found:' programs'
-    CRT
-    CRT 'Building library list (filtering using ':devlibs:')...':CHAR(0):
-    sys = new object("$system")
-    sysm = sys->getroutines('',23)
-    CRT sys->routine->$size():' discovered'
-    found = 0
-    errors = ''
-    paths = ''
-    F.catalog = F.library ;! lazy F.target switch
-    FOR path IN libpaths
-        LOCATE path IN paths BY 'AL' SETTING pos ELSE
-            INS path BEFORE paths<pos>
-        END
-    NEXT path
-    IF INDEX(SYSTEM(1017), 'WIN', 1) THEN paths = UPCASE(paths)
-    fdevs = fdevlibs
-    FOR result in sys->routine
-        IF result->$hasproperty('source') THEN
-            IF NOT(INDEX(result->source, "source file unknown",1)) THEN
-                prog = FIELD(result->version, ' ', 2)
-                IF result->$hasproperty('jelf') THEN
-                    rc = sys->getroutines(prog, 1)
-                    idx = sys->object->$size()-1
-                    result->fullpath = sys->object[idx]->fullpath
-                    IF result->fullpath EQ 'main()' THEN prog = ''
-                END ELSE
-                    idx = result->object_index
-                END
-                IF LEN(prog) THEN
-                    A.fpath = sys->object[idx]->fullpath
-                    A.fpath = fnTRIMLAST(A.fpath, DIR_DELIM_CH)
-                    GOSUB addprog
+        NEXT path
+        IF INDEX(SYSTEM(1017), 'WIN', 1) THEN paths = UPCASE(paths)
+        fdevs = fdevlibs
+        FOR result in sys->routine
+            IF result->$hasproperty('source') THEN
+                IF NOT(INDEX(result->source, "source file unknown",1)) THEN
+                    prog = FIELD(result->version, ' ', 2)
+                    has_jelf = (usejelf AND result->$hasproperty('jelf'))
+                    IF has_jelf THEN
+                        rc = sys->getroutines(prog, 1)
+                        idx = sys->object->$size()-1
+                        result->fullpath = sys->object[idx]->fullpath
+                        IF result->fullpath EQ 'main()' THEN prog = ''
+                    END ELSE
+                        idx = result->object_index
+                    END
+                    IF LEN(prog) THEN
+                        IF prog EQ debug_prog THEN DEBUG
+                        result->fullpath = sys->object[idx]->fullpath
+                        A.fpath = result->fullpath
+                        A.fpath = fnTRIMLAST(A.fpath, DIR_DELIM_CH)
+                        IF verbose THEN CRT prog:
+                        GOSUB addprog
+                        IF verbose THEN CRT
+                    END
                 END
             END
-        END
-    NEXT result
-    CRT
+        NEXT result
+        CRT
 !
-    CRT 'Found ':found:' subroutines'
+        CRT 'Found ':found:' subroutines'
+    END
     IF LEN(errors) THEN
         errcnt = DCOUNT(errors, @AM)
         CRT 'The following binaries could not be determined'
@@ -159,6 +186,8 @@ addcat:
         END
     END
     apath = A.fpath
+    fpath = 1:@AM:@TRUE
+    rc = fnOPEN(apath, f.path, fpath)
 #if WIN32
     apath = UPCASE(apath)
 #endif
@@ -166,6 +195,11 @@ addcat:
 
     found++
     A.fname = fnLAST(io, ' ')
+    IF A.fname EQ '/tmp' AND tmpfix NE '' THEN
+        EXECUTE tmpfix:' ':prog CAPTURING A.fname
+    END ELSE
+        RETURN
+    END
     LOCATE A.fname IN openedFiles<1> BY 'AL' SETTING fpos THEN
         A.fname = openedFiles<2,fpos>
     END ELSE
