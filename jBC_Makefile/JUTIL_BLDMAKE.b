@@ -1,4 +1,4 @@
-! PROGRAM ZUMBLDMAKE
+! PROGRAM JUTIL_BLDMAKE
 !
 ! Generate a Makefile for discovered code
 ! by searching the current bin/lib for source
@@ -29,7 +29,7 @@
 !
 ! Check this routine's dependencies
 !
-    dependencies = 'ZUMGETCATS':@AM:'fnOPEN':@AM:'fnGETYN':@AM:'fnLAST':@AM:'fnPARSESOURCE':@AM:'fnCONVBP2DIR':@AM:'fnMOVEOBJECT':@AM:'fnSPLITSENT'
+    dependencies = 'JUTIL_GETCATS':@AM:'fnOPEN':@AM:'fnGETYN':@AM:'fnLAST':@AM:'fnPARSESOURCE':@AM:'fnCONVBP2DIR':@AM:'fnMOVEOBJECT':@AM:'fnSPLITSENT'
     dc = DCOUNT(dependencies, @AM)
     missing = ''
     FOR i = 1 TO dc
@@ -53,7 +53,7 @@
         LOCATE '-':hlpcmds[h,1] IN args SETTING help THEN BREAK ELSE help = @FALSE
     NEXT h
     IF help THEN
-        CRT 'Syntax: ZUMBLDMAKE {-options}'
+        CRT 'Syntax: JUTIL_BLDMAKE {-options}'
         CRT
         CRT 'Where options:'
         CRT
@@ -64,6 +64,7 @@
         CRT '-m Ignore missing errors'
         CRT '-s Scan for catalog discovery'
         CRT '-C Convert BP files (convert to dir, create OBJECT directory if missing)'
+        CRT '-Y Override duplicate catalog warning'
 !        CRT '-D Generate Doxygen Help'
         STOP
     END
@@ -103,35 +104,43 @@
         DEL args<opos>
     END ELSE doxyGen = @FALSE
 !
+    LOCATE '-Y' IN args SETTING opos THEN
+        ignore_dupe = @TRUE
+        DEL args<opos>
+    END ELSE ignore_dupe = @FALSE
+!
     IF LEN(args) THEN
         CRT 'Invalid args: ':CHANGE(args, @AM, ', ')
         STOP
     END
 !
     rc = GETENV('PWD',pwd)
+    rc = GETENV('JELF',jelf)
+    usingJELF = FIELD(jelf, ',', 1)
     missing_files = ''
-    ZUMCATS = '.':DIR_DELIM_CH:'ZUMCATS'
-    ZUMLIBS = '.':DIR_DELIM_CH:'ZUMLIBS'
+    JUTLCATS = '.':DIR_DELIM_CH:'JUTLCATS'
+    JUTLLIBS = '.':DIR_DELIM_CH:'JUTLLIBS'
     BADCATS = '.':DIR_DELIM_CH:'BADCATS'
     BASICFAILS = '.':DIR_DELIM_CH:'BASICFAILS'
     IF NOT(fnOPEN('.', F.currdir, error)) THEN missing_files<-1> = error
-    IF NOT(fnOPEN(ZUMCATS, F.zumcats, error)) THEN
-        IF NOT(scanForCatalogs) THEN
-            CRT '-s option specified but ZUMCATS could not be opened'
-            STOP
-        END
-        question = 'Create ZUMCATS file for building catalog list'
+    IF NOT(fnOPEN(JUTLCATS, F.jutlcats, error)) THEN
+        question = 'Create JUTLCATS file for building catalog list'
         IF fnGETYN(question, 'Y':@VM:'N') EQ 'Y' THEN
             error = ''
-            EXECUTE 'CREATE-FILE DATA ':ZUMCATS:' 47'
-            EXECUTE 'CREATE-FILE DATA ':ZUMLIBS:' 47'
+            EXECUTE 'CREATE-FILE DATA ':JUTLCATS:' 47'
+            EXECUTE 'CREATE-FILE DATA ':JUTLLIBS:' 47'
             EXECUTE 'CREATE-FILE DATA ':BADCATS:' 47'
             EXECUTE 'CREATE-FILE DATA ':BASICFAILS:' 47'
-            rc = fnOPEN(ZUMCATS, F.zumcats, error)
+            IF NOT(fnOPEN(JUTLCATS, F.jutlcats, error)) THEN
+                IF NOT(scanForCatalogs) THEN
+                    CRT '-s option specified but JUTLCATS could not be opened'
+                    STOP
+                END
+            END
         END
         missing_files<-1> = error
     END
-    rc = fnOPEN(ZUMLIBS, F.zumlibs, error)
+    rc = fnOPEN(JUTLLIBS, F.jutllibs, error)
     GOSUB checkMissing
 !
     READ makefile FROM F.currdir, k.make THEN
@@ -151,12 +160,12 @@
     IF scanForCatalogs THEN
         binpath = pwd:DIR_DELIM_CH:'bin'
         sys = new object("$system")
-        bc = sys->getbinaries('ZUMGETCATS', 23)
+        bc = sys->getbinaries('JUTIL_GETCATS', 23)
         result = sys->binaries[1]
         binpath := DIR_SEP_CH:fnTRIMLAST(result->fullpath, DIR_DELIM_CH)
         binpath := DIR_SEP_CH:SYSTEM(1011):DIR_DELIM_CH:'bin'
         rc = PUTENV('PATH=':binpath)
-        EXECUTE @IM:'kZUMGETCATS'
+        EXECUTE @IM:'kJUTIL_GETCATS'
     END
 !
     pwd = CHANGE(pwd, DIR_DELIM_CH, @AM)
@@ -165,9 +174,9 @@
     libvars = ''
     includes = ''
     missing_mobject = ''
-    F.temp = F.zumcats
+    F.temp = F.jutlcats
     GOSUB checkObject
-    F.temp = F.zumlibs
+    F.temp = F.jutllibs
     GOSUB checkObject
     IF LEN(missing_mobject) THEN
         CRT 'The following files/programs need to be addressed:'
@@ -177,7 +186,6 @@
             CRT 'File: ':missing_mobject<1,f>
             CRT CHANGE(fnSPLITSENT(CHANGE(missing_mobject<2,f>, @SVM,' '), 5), @AM, @CR:@LF)
         NEXT f
-!        STOP
     END
 !
     GOSUB checkMissing
@@ -246,10 +254,12 @@
     K.Makefile = 'Makefile'
     dir_delim = '/'
     cmd_suffix = ''
-    obj_suffix = '.o'
+    obj_suffix = (IF usingJELF THEN '.so' ELSE '.o')
     lib_target = 'lib.el'
     remove_cmd = 'rm'
     foundDollar = @FALSE
+    libtarget = ''
+    catopt = (IF ignore_dupe THEN ' \(O' ELSE '')
 !
     clean = 'libobjs':@AM:'binobjs'
     FOR m = 1 TO 2
@@ -260,16 +270,19 @@
         makelabels = ''
         makemakes = ''
         makewrapup = ''
-        targets = ''
+        bintargets = ''
+        libtargets = ''
         libs = ''
         bins= ''
         catsubs = ''
         rebuild = ''
         object_files = ''
         IF m EQ 1 THEN
-            makeinit<-1> = @AM:'define catlib'
-            makeinit<-1> = 'echo "" $(foreach fname,$(?),&& CATALOG -L./lib $(firstword $(subst /, ,$(fname))) $(word 2,$(subst /, ,$(fname))))'
-            makeinit<-1> = 'endef'
+            IF NOT(usingJELF) THEN
+                makeinit<-1> = @AM:'define catlib'
+                makeinit<-1> = 'echo "" $(foreach fname,$(?),&& CATALOG -L./lib $(firstword $(subst /, ,$(fname))) $(word 2,$(subst /, ,$(fname))))'
+                makeinit<-1> = 'endef'
+            END
         END
         phony<-1> = 'all'
         FOR f = 1 TO fc
@@ -291,13 +304,19 @@
                 objfile = ''
                 CRT 'WARNING: ':objfile:' not available. Makefile will be incomplete'
             END
-            libtarget = 'lib':dir_delim:lib_target
+            IF NOT(usingJELF) THEN
+                libtarget = 'lib':dir_delim:lib_target
+            END
             pc = DCOUNT(progs, @SVM)
             FOR p = 1 TO pc
                 target = progs<1, 1, p>
                 xref = xrefs<1, 1, p>
                 flag = flags<1, 1, p>
                 source = names<1, 1, p>
+                IF LEN(source) EQ 0 THEN
+                    CRT target:' catalog mismatch with code'
+                    CONTINUE
+                END
                 xref = CONVERT(xref, ctrlA:ctrlB:ctrlC, @AM:@VM:@SVM)
                 dependency = fname:dir_delim:source
                 loc = 0
@@ -307,7 +326,7 @@
                         dependency := ' ':CHANGE(incl, '$', '$$')
                     END
                 WHILE delim DO REPEAT
-                IF target EQ source THEN
+                IF target EQ source AND NOT(usingJELF) THEN
                     object = '$$':target
                     foundDollar = @TRUE
                 END ELSE
@@ -320,13 +339,19 @@
                     IF flag THEN
                         libs<-1> = object
                         subs<-1> = source
+                        IF usingJELF THEN
+                            target = '.':dir_delim:'lib':dir_delim:target:obj_suffix
+                            libtargets<-1> = target
+                            makemakes<-1> = @AM:target:': ':object
+                            makemakes<-1> = tab:'CATALOG -L.':dir_delim:'lib ':fname:' ':source
+                        END
                     END ELSE
                         exes<-1> = source
                         bins<-1> = object
                         target = '.':dir_delim:'bin':dir_delim:target:cmd_suffix
-                        targets<-1> = target
+                        bintargets<-1> = target
                         makemakes<-1> = @AM:target:': ':object
-                        makemakes<-1> = tab:'CATALOG -o.':dir_delim:'bin ':fname:' ':source
+                        makemakes<-1> = tab:'CATALOG -o.':dir_delim:'bin ':fname:' ':source:catopt
                     END
                 END
             NEXT p
@@ -335,8 +360,9 @@
                 subs = fnSPLITSENT(subs, word_lim)
                 subc = DCOUNT(subs, @AM)
                 FOR sc = 1 TO subc
-                    catsubs<-1> = tab:'CATALOG -L.':dir_delim:'lib ':fname:' ':subs<sc>
-                    rebuild<-1> = tab:'CATALOG -L.':dir_delim:'lib ':fname:' ':subs<sc>
+                    catcmd = tab:'CATALOG -L.':dir_delim:'lib ':fname:' ':subs<sc>
+                    catsubs<-1> = catcmd
+                    rebuild<-1> = catcmd
                 NEXT sc
             END
             progs = fnSPLITSENT(exes, word_lim)
@@ -347,23 +373,27 @@
         NEXT f
         libs = fnSPLITSENT(libs, word_lim)
         libc = DCOUNT(libs, @AM)
-        libtarget := ':'
-        libmake = tab:'make'
+        IF NOT(usingJELF) THEN libtarget := ':'
+        libmake = tab:'make -s'
         FOR lc = 1 TO libc
             liblabel = 'libs':lc
             libdepend = '$(libobj':lc:')'
-            makemakes<-1> = @AM:liblabel:': ':libdepend
-            IF m EQ 1 THEN
-                makemakes<-1> = tab:'$(catlib)'
+            IF NOT(usingJELF) THEN
+                makemakes<-1> = @AM:liblabel:': ':libdepend
+                IF m EQ 1 THEN
+                    makemakes<-1> = tab:'$(catlib)'
+                END
             END
-            libtarget := ' ':libdepend
+            IF NOT(usingJELF) THEN libtarget := ' ':libdepend
             libmake := ' ':liblabel
         NEXT lc
         IF m EQ 2 THEN
             makemakes<-1> = catsubs
         END
-        makemakes<-1> = @AM:libtarget:@AM:libmake
-        libtarget = FIELD(libtarget, ':', 1)
+        IF NOT(usingJELF) THEN
+            makemakes<-1> = @AM:libtarget:@AM:libmake
+            libtarget = FIELD(libtarget, ':', 1)
+        END
         libs = fnSPLITSENT(libs, word_lim)
         lc = DCOUNT(libs, @AM)
         libobjs = 'libobjs=':
@@ -372,17 +402,26 @@
             makeinit<-1> = libobjvar:'=':libs<lib>
             libobjs := '$(':libobjvar:') '
         NEXT lib
-        targets = fnSPLITSENT(targets, word_lim)
+        bintargets = fnSPLITSENT(bintargets, word_lim)
+        libtargets = fnSPLITSENT(libtargets, word_lim)
         makelabels<-1> = @AM:'targets: allbins alllibs'
         alllibs = 'alllibs: $(libobjs)'
-        alllibs<-1> = tab:'make ':libtarget
-        allbins = tab:'make'
-        lc = DCOUNT(targets, @AM)
+        alllibs<-1> = tab:'make -s ':libtarget
+        allbins = tab:'make -s'
+        lc = DCOUNT(bintargets, @AM)
         FOR target = lc TO 1 STEP -1
             targetbinvar = 'bin':target
-            makeinit<-1> = targetbinvar:'=':targets<target>
+            makeinit<-1> = targetbinvar:'=':bintargets<target>
             allbins := ' $(':targetbinvar:')'
         NEXT lib
+        IF usingJELF THEN
+            lc = DCOUNT(libtargets, @AM)
+            FOR target = lc TO 1 STEP -1
+                targetlibvar = 'lib':target
+                makeinit<-1> = targetlibvar:'=':libtargets<target>
+                alllibs := ' $(':targetlibvar:')'
+            NEXT lib
+        END
         phony<-1> = 'targets'
         makelabels<-1> = @AM:'allbins: $(binobjs)'
         makelabels<-1> = allbins
@@ -400,10 +439,11 @@
         makewrapup<-1> = @AM:'rebuild: $(libobjs) $(binobjs)'
         makewrapup<-1> = rebuild
         makewrapup<-1> = @AM:'clean:'
-        makewrapup<-1> = tab:'-':remove_cmd:' .':dir_delim:'lib':dir_delim:'lib*.*'
+        makewrapup<-1> = tab:'-':remove_cmd:' -rf .':dir_delim:'lib':dir_delim:'*'
+        makewrapup<-1> = tab:'-':remove_cmd:' -f .':dir_delim:'bin':dir_delim:'*'
         nbr_obj_files = DCOUNT(object_files, @AM)
         FOR f = 1 TO nbr_obj_files
-            opts = (IF m EQ 2 THEN ' /F' ELSE '')
+            opts = (IF m EQ 2 THEN ' /F' ELSE ' -f')
             obj_dir = object_files<f>
             IF obj_dir[1,1] NE dir_delim THEN
                 obj_dir = '.':dir_delim:obj_dir
@@ -429,9 +469,10 @@
         K.Makefile = 'Makefile.WIN32'
         dir_delim = '\'
         cmd_suffix = '.exe'
-        obj_suffix = '.obj'
+        obj_suffix = (IF usingJELF THEN '.dll' ELSE '.obj')
         lib_target = 'libdef.def'
         remove_cmd = 'del /Q'
+        catopt = (IF ignore_dupe THEN ' (O' ELSE '')
     NEXT m
     makefile = 'nmake -f Makefile.WIN32 %1 %2 %3 %4 %5 %6 %7 %8 %9'
     WRITE makefile ON F.currdir,'make.bat'

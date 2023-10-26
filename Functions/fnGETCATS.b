@@ -1,10 +1,10 @@
     FUNCTION fnGETCATS(type)
     fnames = ''
-    zumcats = 'ZUMCATS'
-    zumlibs = 'ZUMLIBS'
+    jutlcats = 'JUTLCATS'
+    jutllibs = 'JUTLLIBS'
     search_files = ''
-    IF type NE 'BINS' THEN search_files<-1> = zumlibs
-    IF type NE 'LIBS' THEN search_files<-1> = zumcats 
+    IF type NE 'BINS' THEN search_files<-1> = jutllibs
+    IF type NE 'LIBS' THEN search_files<-1> = jutlcats
     dc = DCOUNT(search_files, @AM)
     FOR f = 1 TO dc
         search_file = search_files<f>

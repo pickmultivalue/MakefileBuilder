@@ -1,6 +1,6 @@
 # jBASE Makefile Builder
 
-> ZUMBLDMAKE is a utility that will build a Makefile
+> JUTIL_BLDMAKE is a utility that will build a Makefile
 > for BASIC code including dependencies for INCLUDEs (recursive)
 
 > Note: Makefiles are dependent on individual source file
@@ -26,7 +26,7 @@ A utility is provided to do that for you:
 
 **CONVBP2DIR *BP_file***
 
-additionally ZUMBLDMAKE has an option to automatically do this (see below).
+additionally JUTIL_BLDMAKE has an option to automatically do this (see below).
 
 ## Installation/Setup
 >You will need access to GNU make of non-Windows or nmake.exe for Windows.
@@ -44,10 +44,12 @@ PATH and JBCOBJECTLIST respectively so that you can build your Makefiles.
 3. If you cleaned out your local bin/lib directories: BASIC/CATALOG all source to the local bin/lib
 4. Set PATH and JBCOBJECTLIST such that these local bin/lib will
 correctly detect the cataloged programs. (this may already be the case for an existing project)
-5. Run ZUMBLDMAKE (with appopriate options)
+5. set JUTLMAKEBINS and JUTLMAKELIBS to the project's bin and lib path
+(So as to restrict the bin/lib discovery to only the project and not what is in the full PATH/JBCOBJECTLIST) 
+6. Run JUTIL_BLDMAKE (with appopriate options)
 
 ```
-Syntax: ZUMBLDMAKE {-options}
+Syntax: JUTIL_BLDMAKE {-options}
 
 Where options:
 
@@ -56,25 +58,26 @@ Where options:
 -f<makefilename> (default: Makefile)
 -o Overwrite
 -m Ignore missing errors
+-s Build new catalog metadata
 -C Convert BP files (convert to dir, create OBJECT directory if missing)
 ```
 
 ## Additional utilities
 | Program | Description |
 |---------|-------------|
-| ZUMGETCATS | Discovers cataloged programs/subroutines (called by ZUMBLDMAKE -s) |
-| ZUMBASIC | Compiles all code discovered by ZUMCATS |
-| ZUMCATALOG | Catalogs all code discovered by ZUMCATS |
-| ZUMCHECKBAS | Checks if the code is compiled (including checking if the object is newer than the source) |
+| JUTIL_GETCATS | Discovers cataloged programs/subroutines (called by JUTIL_BLDMAKE -s) |
+| JUTIL_BASIC | Compiles all code discovered by JUTIL_CATS |
+| JUTIL_CATALOG | Catalogs all code discovered by JUTIL_CATS |
+| JUTIL_CHECKBAS | Checks if the code is compiled (including checking if the object is newer than the source) |
 | CONVBP2DIR | Converts a BP hashed file to a DIR type and creates a BP,OBJECT director if applicable |
 
-### ZUMGETCATS
-This utility generates **ZUMCATS** and **ZUMLIBS** and additionally writes out two files to the current directory:
+### JUTIL_GETCATS
+This utility generates **JUTLCATS** and **JUTLLIBS** and additionally writes out two files to the current directory:
 
 1. executes_found
 2. subroutines_found
 
 These two files are not meant to be definitive discoveries of programs and subroutines EXECUTEd or CALLed but can be useful for getting an overview of what is *in use*. The only entries written out are those that are quoted (for EXECUTE) or not @subname (in the case of CALL).
 
-### ZUMBASIC
+### JUTIL_BASIC
 As well as compiling the source it populates a BASICFAILS file/directory with any failures.
