@@ -195,10 +195,12 @@ addcat:
 
     found++
     A.fname = fnLAST(io, ' ')
-    IF A.fname EQ '/tmp' AND tmpfix NE '' THEN
-        EXECUTE tmpfix:' ':prog CAPTURING A.fname
-    END ELSE
-        RETURN
+    IF A.fname EQ '/tmp' THEN
+        IF tmpfix NE '' THEN
+            EXECUTE tmpfix:' ':prog CAPTURING A.fname
+        END ELSE
+            RETURN
+        END
     END
     LOCATE A.fname IN openedFiles<1> BY 'AL' SETTING fpos THEN
         A.fname = openedFiles<2,fpos>

@@ -4,6 +4,8 @@
     IF progs NE 'BINS' AND progs NE 'LIBS' THEN
         IF LEN(progs) THEN
             proglis = CHANGE(progs, ' ', @AM)
+        END ELSE
+            LOOP WHILE READNEXT prog DO proglist<-1> = prog REPEAT
         END
     END
     IF progs NE 'LIBS' THEN

@@ -9,7 +9,13 @@
     fnames = fnGETCATS(arg1)
     fc = DCOUNT(fnames<1>, @VM)
     rc = GETENV('JBCDEV_LIB',dev_lib)
-    dev_lib := DIR_DELIM_CH:'obj'
+    usingJELF = GETENV('JELF')
+    IF usingJELF THEN
+        libsuffix = '.so'
+    END ELSE
+        dev_lib := DIR_DELIM_CH:'obj'
+        libsuffix = '.o'
+    END
     OPEN dev_lib TO F.devobj ELSE STOP 201,dev_lib
     OPEN 'BASICFAILS' TO F.fails ELSE STOP 201,'BASICFAILS'
     CRT 'Processing ':DQUOTE(cmd):' on the following files: ':
@@ -80,7 +86,7 @@
                         CASE cmd EQ 'CHECKBAS'
                             fullpath = srcinfo:DIR_DELIM_CH:prog
                             srcstamp = fnTIMESTAMP(fullpath)
-                            fullpath = dev_lib:DIR_DELIM_CH:prog:'.o'
+                            fullpath = dev_lib:DIR_DELIM_CH:prog:libsuffix
                             objstamp = fnTIMESTAMP(fullpath)
                             IF LEN(objstamp) THEN
                                 IF objstamp<1> GE srcstamp<1> OR (objstamp<1> EQ srcstamp<1> AND objstamp<2> GE srcstamp<2>) ELSE
@@ -91,7 +97,7 @@
                                 CRT fpath:' missing'
                                 CONTINUE
                             END
-                            fullpath = objinfo:DIR_DELIM_CH:k.obj
+                            fullpath = objinfo:DIR_DELIM_CH:(IF usingJELF THEN prog:libsuffix ELSE k.obj)
                             objstamp = fnTIMESTAMP(fullpath)
                             IF LEN(objstamp) THEN
                                 IF objstamp<1> GE srcstamp<1> OR (objstamp<1> EQ srcstamp<1> AND objstamp<2> GE srcstamp<2>) ELSE
